@@ -1,0 +1,3 @@
+Do not change any code until I tell you to. You may use other commands to review the code base and gather context. We will come up with a plan together, iterate, and once we are done I will tell you to execute the plan.  Ask any clarifying questions that will help guide your implementation. use production quality code and standard, well supported libraries where possible. Avoid rolling your own implement if a standard approach exists (ex: do not implement a JWT function by hand, use an existing library). If using a standard library, use the latest stable version
+
+$ARGUMENTS

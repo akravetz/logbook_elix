@@ -42,6 +42,7 @@ defmodule LogbookElixWeb do
         layouts: [html: LogbookElixWeb.Layouts]
 
       use Gettext, backend: LogbookElixWeb.Gettext
+      use OpenApiSpex.ControllerSpecs
 
       import Plug.Conn
 

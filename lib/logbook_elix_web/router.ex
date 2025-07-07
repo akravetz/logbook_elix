@@ -3,10 +3,17 @@ defmodule LogbookElixWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug OpenApiSpex.Plug.PutApiSpec, module: LogbookElixWeb.ApiSpec
   end
 
   scope "/api", LogbookElixWeb do
     pipe_through :api
+    
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+    
+    resources "/users", UserController, only: [:index, :show, :update]
+    resources "/workouts", WorkoutController, except: [:new, :edit]
+    resources "/exercise_executions", ExerciseExecutionController, except: [:new, :edit]
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

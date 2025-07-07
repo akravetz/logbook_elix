@@ -4,122 +4,163 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LogbookElix is a workout tracking application for weightlifters and bodybuilders. It's an Elixir/Phoenix JSON API backend that serves a React frontend. The app supports creating workouts, adding exercises, tracking sets with progressive overload, and managing custom exercises.
+Get Swole is a workout tracking web application for weightlifters and bodybuilders using progressive overload. This repository contains the **backend API** built with Elixir + Phoenix, serving a React frontend.
 
-## Development Commands
+## Common Commands
 
-### Database
-- `docker-compose up -d` - Start PostgreSQL database (postgres:alpine, user/pass: postgres/postgres)
-- `mix ecto.migrate` - Run database migrations  
-- `mix ecto.setup` - Create database, run migrations, and seed data
-- `mix ecto.reset` - Drop and recreate database completely
+```bash
+# Setup and development
+mix setup                    # Install dependencies and setup database
+mix compile                  # Check compilation (server auto-recompiles on requests)
 
-### Development Server
-- `mix setup` - Install dependencies and setup database (first time setup)
-- `mix phx.server` - Start Phoenix server (runs on localhost:4000)
-- `mix compile` - Check compilation and fix any warnings
-- Server auto-reloads on code changes, never restart manually
+# Database operations
+mix ecto.create             # Create database
+mix ecto.migrate            # Run pending migrations
+mix ecto.drop               # Drop database
+mix ecto.reset              # Drop, create, and migrate database
+mix ecto.setup              # Create, migrate, and seed database
 
-### Testing
-- `mix test` - Run all tests (creates/migrates test database automatically)
-- `mix test --failed` - Run only previously failed tests
-- `mix test --stale` - Run tests for changed modules only
+# Testing
+mix test                    # Run all tests
+mix test --failed           # Run only failed tests
+mix test --stale            # Run only tests for changed modules
+mix test test/path/to/test.exs  # Run specific test file
+
+# Code generation
+mix phx.gen.json Context Model table_name field:type  # Generate JSON API with context, schema, controller
+mix phx.gen.schema Context Model table_name field:type  # Generate schema and migration only
+mix ecto.gen.migration description  # Create migration file
+```
+
+## Development Guidelines
+
+### Server Management
+- **NEVER** start the server with `mix phx.server` or `iex -S mix phx.server` - assume it's already running
+- **NEVER** run standalone `iex` sessions
+- Server auto-recompiles on web requests, no restart needed
+- Use `mix compile` to check compilation and fix any warnings
+
+### Module Naming
+- All modules must start with `Logbook.` or `LogbookWeb.`
 
 ## Architecture
 
-### Core Structure
-- **Phoenix 1.7.21** JSON API (no HTML views)
-- **PostgreSQL** database with UTC timestamps
-- **Ecto** for database operations
-- **Bandit** HTTP server
+### Data Model Hierarchy
+The application follows a hierarchical workout structure with cascade deletes:
+- **User** → **Workout** → **ExerciseExecution** → **Set**
+- Deleting a workout removes all its exercise executions and sets
+- Deleting an exercise execution removes all its sets
 
 ### Context Organization
-- `LogbookElix.Accounts` - User management (Google OAuth)
-- `LogbookElix.Exercises` - Exercise definitions and management
-- `LogbookElix.Workouts` - Workout sessions, exercise executions, and sets
+Phoenix contexts organize related functionality:
+- `LogbookElix.Accounts` - User management
+- `LogbookElix.Workouts` - Workout CRUD operations  
+- `LogbookElix.Executions` - Exercise execution management with Set cascade operations
+- `LogbookElix.Sets` - Set schema (no direct API access)
 
-### Database Schema Relationships
-```
-User (Google OAuth profile)
-├── Exercises (created_by_user_id)
-└── Workouts (user_id)
-    └── ExerciseExecutions (workout_id, exercise_id, exercise_order)
-        └── Sets (exercise_execution_id, weight, clean_reps, forced_reps)
-```
+### API Design
+- **Users**: Read-only API except name updates (no create/delete via API)
+- **Workouts**: Full CRUD operations
+- **ExerciseExecutions**: Full CRUD with automatic Set handling via `cast_assoc`
+- **Sets**: No direct API endpoints - managed through ExerciseExecution operations
 
-### Key Design Patterns
-- **Sets are managed through ExerciseExecutions** using `cast_assoc(:sets)` - no separate Set API
-- **Workouts can include ExerciseExecutions** using `cast_assoc(:exercise_executions)`
-- **Context functions preload associations** (workouts preload exercise_executions and sets)
-- **UTC timestamps** used throughout (`--timestamps-type utc_datetime`)
+### OpenAPI Integration
+- OpenApiSpex generates API documentation from controller annotations
+- API spec available at `/api/openapi`
+- All controllers inherit OpenApiSpex behavior via `LogbookElixWeb` controller macro
 
-## API Structure
+### Authentication Flow (Future Implementation)
+Frontend handles Google OAuth → Backend verifies Google token → Returns JWT for API access. JWT expires after 3 hours to avoid refresh token complexity.
 
-### Available Endpoints
-- `GET|POST|PUT|DELETE /api/exercises` - Exercise CRUD operations
-- `GET|POST|PUT|DELETE /api/workouts` - Workout CRUD (with nested exercise_executions and sets)
-- `GET|POST|PUT|DELETE /api/exercise_executions` - Exercise execution CRUD (with nested sets)
+## Database Schema Notes
+- All models use UTC timestamps (`:utc_datetime`)
+- Integer primary keys on all tables
+- Foreign key constraints with appropriate cascade delete behavior
+- `forced_reps` defaults to 0, `is_active` defaults to true
 
-### Authentication (Not Yet Implemented)
-- Google OAuth token verification endpoint planned
-- JWT tokens with 3-hour expiration
-- Most endpoints will require authentication except token verification
+## Error Handling
 
-## Code Conventions
+### Core Principle: "Let it Crash"
+- Functions should return `{:error, "error_reason"}` when errors are expected
+- **NEVER** use `try`, `catch`, or `rescue` - let unexpected errors crash the process
+- Elixir processes are isolated; crashes don't corrupt other processes
+- Supervisors restart crashed processes automatically
 
-### Error Handling - CRITICAL
-- **NEVER** use `try`, `catch`, or `rescue` - follow "let it crash" philosophy
-- **ALWAYS** use `with` statements in controllers, **NEVER** include `else` clauses
-- Let `FallbackController` handle all `{:error, ...}` tuples
-- Functions return `{:ok, result}` or `{:error, reason}` tuples
+### Controller Error Handling
+- **MANDATORY**: Use `with` statements for all business logic operations
+- **NEVER** include `else` clauses in `with` statements
+- **NEVER** use `case` statements for error handling in controller actions
+- **NEVER** manually handle `{:error, ...}` tuples in controller actions
+- All controller actions must declare `action_fallback LogbookElixWeb.FallbackController`
 
-### Ecto Query Style - MANDATORY
-Always use `from()` macro syntax, never pipe-based queries:
-
-```elixir
-# ✅ Correct
-from(w in Workout,
-  where: w.user_id == ^user_id,
-  preload: [exercise_executions: :sets],
-  order_by: [desc: w.inserted_at]
-)
-
-# ❌ Wrong  
-Workout
-|> where([w], w.user_id == ^user_id)
-|> preload([w], exercise_executions: :sets)
-```
-
-### Database Conventions
-- Use `:text` for string columns in migrations (`:string` in schemas)
-- Use `:jsonb` for JSON columns (`:map` in schemas) 
-- Set defaults: `timestamps(default: fragment("now()"))`
-- Avoid unnecessary preloads - only preload what's needed
-
-### Controller Patterns
+#### ✅ Correct Controller Pattern
 ```elixir
 def create(conn, %{"workout" => workout_params}) do
   user = Guardian.Plug.current_resource(conn)
-  
+
   with {:ok, workout} <- Workouts.create_workout(workout_params, user.id) do
     conn
     |> put_status(:created)
-    |> render("show.json", workout: workout)
+    |> render(:show, workout: workout)
   end
 end
 ```
 
+## Database Development
+
+### Ecto Query Style
+Use `from()` macro syntax for all queries instead of pipe-based approach:
+
+#### ✅ Preferred Style
+```elixir
+def list_workouts(user_id) do
+  from(w in Workout,
+    where: w.user_id == ^user_id,
+    where: not is_nil(w.finished_at),
+    preload: [:exercise_executions],
+    order_by: [desc: w.finished_at]
+  )
+  |> Repo.all()
+end
+```
+
+#### ❌ Avoid This Style
+```elixir
+def list_workouts(user_id) do
+  Workout
+  |> where([w], w.user_id == ^user_id)
+  |> where([w], not is_nil(w.finished_at))
+  |> preload([:exercise_executions])
+  |> order_by([w], desc: w.finished_at)
+  |> Repo.all()
+end
+```
+
+### Query Guidelines
+- Use meaningful variable names for bindings (e.g., `w` for Workout, `ee` for ExerciseExecution)
+- Alias tables when reused: `as: :workout`
+- Join using `assoc()` instead of `on` clauses when possible
+- Avoid unnecessary preloads - only load what you need
+- Never preload associations while mapping over lists
+- Prefer selecting specific fields instead of whole schemas
+
+### Migration Guidelines
+- Group related changes into single migration files
+- Always use `:text` for string columns (`:string` in schemas)
+- Always use `:jsonb` for JSON columns (`:map` in schemas)
+- Set default timestamps: `timestamps(default: fragment("now()"))`
+
 ## Testing
-- Uses **ExUnit** with database sandboxing
-- Test files mirror source structure in `test/` directory
-- Use **ExMachina** for test data factories
-- Fix all compilation warnings during testing
 
-## Important Notes
-- **Module naming**: All modules start with `LogbookElix.` or `LogbookElixWeb.`
-- **No try/catch/rescue**: Critical rule - use proper error handling patterns
-- **Preloads**: Be selective - don't preload associations unnecessarily
-- **Timestamps**: All database timestamps are UTC
-- **API responses**: JSON only, use proper HTTP status codes
+### Test Organization
+- Use ExUnit tests, not script files
+- Mirror directory structure: test files should match functionality paths
+- Use ExMachina for test data setup
+- Run tests with various options: `--failed`, `--stale`, `--trace`, etc.
+- Always fix compilation warnings during testing
 
-Reference @docs/project_description.md for the general project goals
+## Key Files
+- `lib/logbook_elix_web/router.ex` - API route definitions
+- `lib/logbook_elix_web/controllers/api_spec.ex` - OpenAPI specification
+- `docs/project_plan.md` - Complete project requirements and frontend architecture
+- `docs/models.md` - Original data model definitions

@@ -18,5 +18,4 @@ Key implementation details (algorithms, data structures, API endpoints)
 
 Ask clarifying questions about requirements, constraints, or architectural decisions before finalizing the plan.
 
-## Plan the following feature:
-$ARGUMENTS
+## Plan the features document in $ARGUMENTS

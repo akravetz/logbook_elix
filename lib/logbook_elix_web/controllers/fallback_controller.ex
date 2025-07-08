@@ -21,4 +21,11 @@ defmodule LogbookElixWeb.FallbackController do
     |> put_view(html: LogbookElixWeb.ErrorHTML, json: LogbookElixWeb.ErrorJSON)
     |> render(:"404")
   end
+
+  # This clause handles authentication errors from the Google token verifier.
+  def call(conn, {:error, error_message}) when is_binary(error_message) do
+    conn
+    |> put_status(:unauthorized)
+    |> json(%{error: error_message})
+  end
 end

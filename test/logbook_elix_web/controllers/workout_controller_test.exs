@@ -2,6 +2,7 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   use LogbookElixWeb.ConnCase
 
   import LogbookElix.Factory
+  import LogbookElixWeb.AuthTestHelper
 
   alias LogbookElix.Workouts.Workout
 
@@ -15,7 +16,12 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   @invalid_attrs %{user_id: nil}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn = 
+      conn
+      |> put_req_header("accept", "application/json")
+      |> authenticated_conn()
+    
+    {:ok, conn: conn}
   end
 
   describe "index" do

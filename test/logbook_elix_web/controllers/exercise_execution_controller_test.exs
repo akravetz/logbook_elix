@@ -2,6 +2,7 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   use LogbookElixWeb.ConnCase
 
   import LogbookElix.Factory
+  import LogbookElixWeb.AuthTestHelper
 
   alias LogbookElix.Executions.ExerciseExecution
 
@@ -19,7 +20,12 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   @invalid_attrs %{exercise: nil, note: nil, exercise_order: nil}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn = 
+      conn
+      |> put_req_header("accept", "application/json")
+      |> authenticated_conn()
+    
+    {:ok, conn: conn}
   end
 
   describe "index" do

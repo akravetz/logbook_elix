@@ -6,11 +6,30 @@ defmodule LogbookElixWeb.Router do
     plug OpenApiSpex.Plug.PutApiSpec, module: LogbookElixWeb.ApiSpec
   end
 
+  pipeline :auth do
+    plug Guardian.Plug.Pipeline,
+      module: LogbookElix.Auth.Guardian,
+      error_handler: LogbookElixWeb.AuthErrorHandler
+    plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
+    plug Guardian.Plug.EnsureAuthenticated
+    plug Guardian.Plug.LoadResource
+  end
+
   scope "/api", LogbookElixWeb do
     pipe_through :api
 
     # fix this later
     # get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+
+    # Authentication routes (no auth required)
+    post "/auth/verify-google-token", AuthController, :verify_google_token
+  end
+
+  scope "/api", LogbookElixWeb do
+    pipe_through [:api, :auth]
+
+    # Authenticated auth routes
+    post "/auth/logout", AuthController, :logout
 
     resources "/users", UserController, only: [:index, :show, :update]
     resources "/workouts", WorkoutController, except: [:new, :edit]

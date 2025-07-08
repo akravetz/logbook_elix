@@ -2,6 +2,7 @@ defmodule LogbookElixWeb.UserControllerTest do
   use LogbookElixWeb.ConnCase
 
   import LogbookElix.Factory
+  import LogbookElixWeb.AuthTestHelper
 
   alias LogbookElix.Accounts.User
 
@@ -10,13 +11,21 @@ defmodule LogbookElixWeb.UserControllerTest do
   @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn = 
+      conn
+      |> put_req_header("accept", "application/json")
+      |> authenticated_conn()
+    
+    {:ok, conn: conn}
   end
 
   describe "index" do
     test "lists all users", %{conn: conn} do
       conn = get(conn, ~p"/api/users")
-      assert json_response(conn, 200)["data"] == []
+      # There will be at least one user from the authentication setup
+      response_data = json_response(conn, 200)["data"]
+      assert is_list(response_data)
+      assert length(response_data) >= 1
     end
   end
 

@@ -31,3 +31,8 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Guardian configuration for testing
+config :logbook_elix, LogbookElix.Auth.Guardian,
+  secret_key: "test-secret-key-change-in-production",
+  ttl: {3, :hours}

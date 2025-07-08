@@ -24,7 +24,7 @@ Get Swole is a web app that is used to manage and track workouts for weightlifte
 - deployed on vercel.com
 
 # Authentication
-Authentication is handled largely by the frontend. The frontend will handle the entire google oauth flow. The access token that is returned by google oauth is passed to the backend via an API call. The API call is responsible for taking the access token, verifying it using the google token verification endpoint, and then returning a JWT access token that is then used by the frontend for future API calls
+Authentication is handled largely by the frontend. The frontend will handle the entire google oauth flow. The access token that is returned by google oauth is passed to the backend via an API call. The API call is responsible for taking the access token, verifying it using the google token verification endpoint, and then returning a JWT access token that is then used by the frontend for future API calls.
 
 # Backend Description
 The backend is a simple collection of CRUD API endpoints.  The only endpoints that can be accessed without a valid JWT token are the verify-google-token endpoint.  This endpoint takes a google access token and verifies it (see Authentication section).  Upon success the user is looked up in the User schema based on their email address. If the user does not exist, one is created based on information from the google profile.

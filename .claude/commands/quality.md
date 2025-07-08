@@ -1,4 +1,7 @@
 Use `git diff --name-only main...` to identify changed files. Read the entire file then analyze for maintainability and cleanliness issues.
+
+Follow elixir patterns documented in @docs/elixir_conventions.md
+
 Focus Areas
 
 Dead Code: Unreachable code, unused variables/functions/imports, commented-out blocks

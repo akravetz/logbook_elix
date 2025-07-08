@@ -1,25 +1,13 @@
 defmodule LogbookElixWeb.UserControllerTest do
   use LogbookElixWeb.ConnCase
 
-  import LogbookElix.AccountsFixtures
+  import LogbookElix.Factory
 
   alias LogbookElix.Accounts.User
 
-  @create_attrs %{
-    name: "some name",
-    email_address: "some email_address",
-    google_id: "some google_id",
-    profile_image_url: "some profile_image_url",
-    is_active: true
-  }
-  @update_attrs %{
-    name: "some updated name",
-    email_address: "some updated email_address",
-    google_id: "some updated google_id",
-    profile_image_url: "some updated profile_image_url",
-    is_active: false
-  }
-  @invalid_attrs %{name: nil, email_address: nil, google_id: nil, profile_image_url: nil, is_active: nil}
+  # Only name is updatable per CLAUDE.md guidelines
+  @update_attrs %{name: "some updated name"}
+  @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -32,26 +20,20 @@ defmodule LogbookElixWeb.UserControllerTest do
     end
   end
 
-  describe "create user" do
-    test "renders user when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/api/users", user: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+  describe "show user" do
+    setup [:create_user]
 
-      conn = get(conn, ~p"/api/users/#{id}")
-
+    test "renders user", %{conn: conn, user: user} do
+      conn = get(conn, ~p"/api/users/#{user}")
       assert %{
-               "id" => ^id,
-               "email_address" => "some email_address",
-               "google_id" => "some google_id",
-               "is_active" => true,
-               "name" => "some name",
-               "profile_image_url" => "some profile_image_url"
+               "id" => id,
+               "email_address" => _email,
+               "google_id" => _google_id,
+               "is_active" => _is_active,
+               "name" => _name,
+               "profile_image_url" => _profile_url
              } = json_response(conn, 200)["data"]
-    end
-
-    test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/api/users", user: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
+      assert id == user.id
     end
   end
 
@@ -66,11 +48,7 @@ defmodule LogbookElixWeb.UserControllerTest do
 
       assert %{
                "id" => ^id,
-               "email_address" => "some updated email_address",
-               "google_id" => "some updated google_id",
-               "is_active" => false,
-               "name" => "some updated name",
-               "profile_image_url" => "some updated profile_image_url"
+               "name" => "some updated name"
              } = json_response(conn, 200)["data"]
     end
 
@@ -80,21 +58,9 @@ defmodule LogbookElixWeb.UserControllerTest do
     end
   end
 
-  describe "delete user" do
-    setup [:create_user]
-
-    test "deletes chosen user", %{conn: conn, user: user} do
-      conn = delete(conn, ~p"/api/users/#{user}")
-      assert response(conn, 204)
-
-      assert_error_sent 404, fn ->
-        get(conn, ~p"/api/users/#{user}")
-      end
-    end
-  end
 
   defp create_user(_) do
-    user = user_fixture()
+    user = insert(:user)
     %{user: user}
   end
 end

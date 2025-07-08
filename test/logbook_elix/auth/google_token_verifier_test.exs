@@ -4,7 +4,6 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
   alias LogbookElix.Auth.GoogleTokenVerifier
   import JwtTestHelper
 
-
   # Mock JWT with known structure for testing
   @mock_jwt_claims %{
     "iss" => "https://accounts.google.com",
@@ -17,7 +16,6 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
   }
 
   describe "verify_token/1" do
-
     test "extracts user info from valid claims" do
       user_info = extract_user_info_from_claims(@mock_jwt_claims)
       assert user_info.email == "cppcoder@gmail.com"
@@ -36,7 +34,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
 
     test "validates issuer correctly" do
       valid_issuers = GoogleTokenVerifier.valid_issuers()
-      
+
       assert "https://accounts.google.com" in valid_issuers
       assert "accounts.google.com" in valid_issuers
       refute "https://evil.com" in valid_issuers

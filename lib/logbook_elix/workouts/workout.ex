@@ -4,7 +4,7 @@ defmodule LogbookElix.Workouts.Workout do
 
   schema "workouts" do
     field :finished_at, :utc_datetime
-    
+
     belongs_to :user, LogbookElix.Accounts.User
     has_many :exercise_executions, LogbookElix.Executions.ExerciseExecution
 

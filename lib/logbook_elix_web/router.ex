@@ -10,6 +10,7 @@ defmodule LogbookElixWeb.Router do
     plug Guardian.Plug.Pipeline,
       module: LogbookElix.Auth.Guardian,
       error_handler: LogbookElixWeb.AuthErrorHandler
+
     plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
     plug Guardian.Plug.EnsureAuthenticated
     plug Guardian.Plug.LoadResource

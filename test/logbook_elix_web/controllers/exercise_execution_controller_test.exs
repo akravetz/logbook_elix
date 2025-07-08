@@ -20,11 +20,11 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   @invalid_attrs %{exercise: nil, note: nil, exercise_order: nil}
 
   setup %{conn: conn} do
-    conn = 
+    conn =
       conn
       |> put_req_header("accept", "application/json")
       |> authenticated_conn()
-    
+
     {:ok, conn: conn}
   end
 
@@ -63,8 +63,15 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
       %{exercise_execution: insert(:exercise_execution)}
     end
 
-    test "renders exercise_execution when data is valid", %{conn: conn, exercise_execution: %ExerciseExecution{id: id} = exercise_execution} do
-      conn = put(conn, ~p"/api/exercise_executions/#{exercise_execution}", exercise_execution: @update_attrs)
+    test "renders exercise_execution when data is valid", %{
+      conn: conn,
+      exercise_execution: %ExerciseExecution{id: id} = exercise_execution
+    } do
+      conn =
+        put(conn, ~p"/api/exercise_executions/#{exercise_execution}",
+          exercise_execution: @update_attrs
+        )
+
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(conn, ~p"/api/exercise_executions/#{id}")
@@ -77,8 +84,15 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
              } = json_response(conn, 200)["data"]
     end
 
-    test "renders errors when data is invalid", %{conn: conn, exercise_execution: exercise_execution} do
-      conn = put(conn, ~p"/api/exercise_executions/#{exercise_execution}", exercise_execution: @invalid_attrs)
+    test "renders errors when data is invalid", %{
+      conn: conn,
+      exercise_execution: exercise_execution
+    } do
+      conn =
+        put(conn, ~p"/api/exercise_executions/#{exercise_execution}",
+          exercise_execution: @invalid_attrs
+        )
+
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -88,7 +102,10 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
       %{exercise_execution: insert(:exercise_execution)}
     end
 
-    test "deletes chosen exercise_execution", %{conn: conn, exercise_execution: exercise_execution} do
+    test "deletes chosen exercise_execution", %{
+      conn: conn,
+      exercise_execution: exercise_execution
+    } do
       conn = delete(conn, ~p"/api/exercise_executions/#{exercise_execution}")
       assert response(conn, 204)
 

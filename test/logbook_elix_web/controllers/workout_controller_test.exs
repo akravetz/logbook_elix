@@ -16,11 +16,11 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   @invalid_attrs %{user_id: nil}
 
   setup %{conn: conn} do
-    conn = 
+    conn =
       conn
       |> put_req_header("accept", "application/json")
       |> authenticated_conn()
-    
+
     {:ok, conn: conn}
   end
 

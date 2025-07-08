@@ -26,5 +26,4 @@ defmodule LogbookElixWeb.AuthTestHelper do
     conn
     |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
   end
-
 end

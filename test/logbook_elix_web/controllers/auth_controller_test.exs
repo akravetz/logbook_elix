@@ -10,9 +10,10 @@ defmodule LogbookElixWeb.AuthControllerTest do
 
   describe "verify_google_token" do
     test "returns error for invalid Google token", %{conn: conn} do
-      conn = post(conn, ~p"/api/auth/verify-google-token", %{
-        "google_token" => "invalid-token"
-      })
+      conn =
+        post(conn, ~p"/api/auth/verify-google-token", %{
+          "google_token" => "invalid-token"
+        })
 
       assert response(conn, 401)
     end

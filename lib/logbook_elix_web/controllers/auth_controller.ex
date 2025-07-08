@@ -29,7 +29,7 @@ defmodule LogbookElixWeb.AuthController do
 
   def logout(conn, _params) do
     jwt = Guardian.Plug.current_token(conn)
-    
+
     with {:ok, _claims} <- Guardian.revoke(jwt) do
       conn
       |> put_status(:ok)

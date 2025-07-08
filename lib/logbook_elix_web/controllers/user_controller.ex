@@ -11,7 +11,6 @@ defmodule LogbookElixWeb.UserController do
     render(conn, :index, users: users)
   end
 
-
   def show(conn, %{"id" => id}) do
     user = Accounts.get_user!(id)
     render(conn, :show, user: user)
@@ -24,5 +23,4 @@ defmodule LogbookElixWeb.UserController do
       render(conn, :show, user: user)
     end
   end
-
 end

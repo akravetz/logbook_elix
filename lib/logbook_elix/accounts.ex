@@ -132,18 +132,20 @@ defmodule LogbookElix.Accounts do
 
   """
   def find_or_create_user_by_email(user_info) do
-    case get_user_by_email(user_info.email) do
-      nil ->
-        create_user(%{
-          email_address: user_info.email,
-          google_id: user_info.google_id,
-          name: user_info.name,
-          profile_image_url: user_info.profile_image_url,
-          is_active: true
-        })
+    attrs = %{
+      email_address: user_info.email,
+      google_id: user_info.google_id,
+      name: user_info.name,
+      profile_image_url: user_info.profile_image_url,
+      is_active: true
+    }
 
-      %User{} = user ->
-        {:ok, user}
-    end
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace, [:google_id, :name, :profile_image_url, :is_active]},
+      conflict_target: :email_address,
+      returning: true
+    )
   end
 end

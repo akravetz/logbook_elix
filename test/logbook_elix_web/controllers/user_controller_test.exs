@@ -11,11 +11,11 @@ defmodule LogbookElixWeb.UserControllerTest do
   @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
-    conn = 
+    conn =
       conn
       |> put_req_header("accept", "application/json")
       |> authenticated_conn()
-    
+
     {:ok, conn: conn}
   end
 
@@ -36,6 +36,7 @@ defmodule LogbookElixWeb.UserControllerTest do
 
     test "renders user", %{conn: conn, user: user} do
       conn = get(conn, ~p"/api/users/#{user}")
+
       assert %{
                "id" => id,
                "email_address" => _email,
@@ -44,6 +45,7 @@ defmodule LogbookElixWeb.UserControllerTest do
                "name" => _name,
                "profile_image_url" => _profile_url
              } = json_response(conn, 200)["data"]
+
       assert id == user.id
     end
   end

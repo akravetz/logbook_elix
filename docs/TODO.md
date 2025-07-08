@@ -13,3 +13,7 @@ Verification failure due to an invalid signature.
 Verification failure due to an expired token (exp claim).
 Verification failure due to an invalid issuer (iss claim).
 Verification failure due to a token being used too early (iat claim).
+
+----
+
+Add `mix credo` static analysis to the GitHub Actions test workflow for improved code quality checking.

@@ -1,5 +1,5 @@
 ## Planning Phase - No Code Change
-DO NOT modify any code yet. First, analyze the codebase and requirements to create a concrete implementation plan. Use available commands to explore the project structure, dependencies, and existing patterns.
+DO NOT modify any code until I type "act". First, analyze the codebase and requirements to create a concrete implementation plan. Use available commands to explore the project structure, dependencies, and existing patterns.
 
 ## Implementation Standards
 

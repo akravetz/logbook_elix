@@ -1,10 +1,9 @@
-name: Test
+name: Backend Format &Test
 
 on:
-  push:
-    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    paths-ignore:
+      - frontend/**
 
 env:
   MIX_ENV: test

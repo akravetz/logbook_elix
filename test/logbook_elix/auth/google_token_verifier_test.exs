@@ -2,6 +2,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
   use LogbookElix.DataCase
 
   alias LogbookElix.Auth.GoogleTokenVerifier
+  import JwtTestHelper
 
 
   # Mock JWT with known structure for testing
@@ -24,7 +25,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
       # 3. Verify the full flow
       
       # For now, we'll test the individual components
-      assert {:ok, user_info} = extract_user_info_from_claims(@mock_jwt_claims)
+      user_info = extract_user_info_from_claims(@mock_jwt_claims)
       assert user_info.email == "cppcoder@gmail.com"
       assert user_info.google_id == "1234567890"
       assert user_info.name == "Test User"
@@ -47,6 +48,16 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
       assert {:error, "Missing required claims"} = validate_claims_fields(claims_missing_sub)
     end
 
+    defp validate_claims_fields(claims) do
+      required_fields = ["sub", "email"]
+
+      if Enum.all?(required_fields, &Map.has_key?(claims, &1)) do
+        :ok
+      else
+        {:error, "Missing required claims"}
+      end
+    end
+
     test "validates issuer" do
       valid_claims = @mock_jwt_claims
       assert :ok = validate_issuer_claim(valid_claims["iss"])
@@ -55,40 +66,19 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
       assert {:error, "Invalid token issuer"} = validate_issuer_claim(invalid_claims["iss"])
     end
 
+    defp validate_issuer_claim(iss) when iss in ["https://accounts.google.com", "accounts.google.com"], do: :ok
+    defp validate_issuer_claim(_), do: {:error, "Invalid token issuer"}
+
     test "handles missing name gracefully" do
       claims_without_name = Map.delete(@mock_jwt_claims, "name")
-      {:ok, user_info} = extract_user_info_from_claims(claims_without_name)
+      user_info = extract_user_info_from_claims(claims_without_name)
       assert user_info.name == "cppcoder@gmail.com"
     end
 
     test "handles missing picture gracefully" do
       claims_without_picture = Map.delete(@mock_jwt_claims, "picture")
-      {:ok, user_info} = extract_user_info_from_claims(claims_without_picture)
+      user_info = extract_user_info_from_claims(claims_without_picture)
       assert user_info.profile_image_url == ""
     end
   end
-
-  # Helper functions that mirror the private functions in GoogleTokenVerifier
-  defp extract_user_info_from_claims(claims) do
-    {:ok,
-     %{
-       google_id: claims["sub"],
-       email: claims["email"],
-       name: claims["name"] || claims["email"],
-       profile_image_url: claims["picture"] || ""
-     }}
-  end
-
-  defp validate_claims_fields(claims) do
-    required_fields = ["sub", "email"]
-
-    if Enum.all?(required_fields, &Map.has_key?(claims, &1)) do
-      :ok
-    else
-      {:error, "Missing required claims"}
-    end
-  end
-
-  defp validate_issuer_claim(iss) when iss in ["https://accounts.google.com", "accounts.google.com"], do: :ok
-  defp validate_issuer_claim(_), do: {:error, "Invalid token issuer"}
 end

@@ -2,29 +2,26 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierIntegrationTest do
   use LogbookElix.DataCase
 
   alias LogbookElix.Auth.GoogleTokenVerifier
+  import JwtTestHelper
 
   # This is an actual Google ID token for testing
   # Note: This token is expired and should only be used for testing token parsing
   @real_google_token "eyJhbGciOiJSUzI1NiIsImtpZCI6ImFjMmI2ZmFmMDNlOGU0MWM0MzA0YjhkZmE4MjExODQ2OGJiODk4OGEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIxMDE1NTM1OTQ2NTg2OTgyOTUwMi5hcHBzLmdvb2dsZXVzZXJjb250ZW50LmNvbSIsImF1ZCI6IjEwMTU1MzU5NDY1ODY5ODI5NTAyLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTE0MDQ3OTEyODI0MTQ3MjIzNDE4IiwiZW1haWwiOiJjcHBjb2RlckBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkNQUCBDb2RlciIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQVRYQUp5RzRUQzJQcDRULXhQRVRzLUxJa1ZfVXJnUDR3VTU5YmhlWHpJPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6IkNQUCIsImZhbWlseV9uYW1lIjoiQ29kZXIiLCJsb2NhbGUiOiJlbiIsImlhdCI6MTY0MjYxNjQwMCwiZXhwIjoxNjQyNjIwMDAwfQ.XnZTx8NYXwR4kxHgRADOj4zM_i3fHqBYrnZFCD-FqrABQWYTZzOR9xGhwvLz9R1_aPcDfH-vH_2GmPvGzPYPwZYKMHvKOIxCLJ7xdHrKoKMxAKhVJpO9eGvvx_JxKsHQJOtbO9hhXTM1vKXmK5OWhkLvyFHBdxQEQenAFRmOtMGXYIIJrMfhSJGPnkJ_kHf_R4vbHcF1M-BKxlhMPqKn6F0H8kH_NsGvgQ4JKlHsZxDzt1K7vhXQfmxKqgxR0rQMXMZ1_gJKmZrqZpqaQKxn3CQdHpbQkRHxlPGNlOVYxNG4KkFECPM2lYXpjmKQXH_YSYBxQGQYLQ6_H5MaUg"
+  @expected_kid_1 "ac2b6faf03e8e41c4304b8dfa82118468bb8988a"
+  @expected_kid_2 "8e8fc8e556f7a76d08d35829d6f90ae2e12cfd0d"
 
   describe "verify_token/1 with real token structure" do
 
     test "can parse JWT header from real Google token" do
-      # Extract the header from the real token
-      [header_segment | _] = String.split(@real_google_token, ".")
-      {:ok, decoded} = Base.url_decode64(header_segment, padding: false)
-      {:ok, header} = Jason.decode(decoded)
+      {:ok, header} = parse_jwt_header(@real_google_token)
 
       assert header["alg"] == "RS256"
-      assert header["kid"] == "ac2b6faf03e8e41c4304b8dfa82118468bb8988a"
+      assert header["kid"] == @expected_kid_1
       assert header["typ"] == "JWT"
     end
 
     test "can parse JWT claims from real Google token" do
-      # Extract the claims from the real token
-      [_, claims_segment | _] = String.split(@real_google_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
+      {:ok, claims} = parse_jwt_claims(@real_google_token)
 
       assert claims["iss"] == "https://accounts.google.com"
       assert claims["email"] == "cppcoder@gmail.com"
@@ -34,18 +31,8 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierIntegrationTest do
     end
 
     test "extracts correct user info from real token claims" do
-      # Extract the claims from the real token
-      [_, claims_segment | _] = String.split(@real_google_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
-
-      # Use the private function logic to extract user info
-      user_info = %{
-        google_id: claims["sub"],
-        email: claims["email"],
-        name: claims["name"] || claims["email"],
-        profile_image_url: claims["picture"] || ""
-      }
+      {:ok, claims} = parse_jwt_claims(@real_google_token)
+      user_info = extract_user_info_from_claims(claims)
 
       assert user_info.google_id == "114047912824147223418"
       assert user_info.email == "cppcoder@gmail.com"
@@ -54,7 +41,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierIntegrationTest do
     end
 
     test "validates issuer correctly" do
-      valid_issuers = ["https://accounts.google.com", "accounts.google.com"]
+      valid_issuers = GoogleTokenVerifier.valid_issuers()
       
       assert "https://accounts.google.com" in valid_issuers
       assert "accounts.google.com" in valid_issuers
@@ -75,20 +62,12 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierIntegrationTest do
     test "can parse real Google ID token structure" do
       id_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlOGZjOGU1NTZmN2E3NmQwOGQzNTgyOWQ2ZjkwYWUyZTEyY2ZkMGQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI4MTg2OTE2MTk0MDItZXFvYjIybjNvdW05bmI5cDE0c2liNzNhaXFudmdvNGUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4MTg2OTE2MTk0MDItZXFvYjIybjNvdW05bmI5cDE0c2liNzNhaXFudmdvNGUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ0NjA1MjEyNDAzODgzNzE5OTgiLCJlbWFpbCI6ImNwcGNvZGVyQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoiSzc4ZUMtcHc5UVZicVp6Q1o2M01fUSIsImlhdCI6MTc1MTk0MTUyMSwiZXhwIjoxNzUxOTQ1MTIxfQ.AR2eSHBK1zfABFFipU1T9iqy3EdK0fqhG3TS4OlZ4fUQL12jsXQiPeMtRRZUCVF2vPrqkfMn8gMgOZjqPaUza9aP3m6SvaYpqMb9WMhaDhvyR11Po35TENu4RvRkUNh2AXX_Pcav58h7Uo01ncB92KA1zECAWpnRnn6Y2U9EnJ8cQWUcmlpo3ZeaYzPIEnNZj03O2mwaThNphHHL2W0Lz-SabmSd_o6HGGEYTAEmyXfkIUIlIAI_jtyqQRv_UtOCKTcC0WH1uEJkCoZs6tSnHWH2abmI7UAW770UMGpZPm8l-x9hpeB_1_X1tw3d0_u-LHdeFI5SMjLkaFCT2BaMEg"
       
-      # Extract the header
-      [header_segment | _] = String.split(id_token, ".")
-      {:ok, decoded} = Base.url_decode64(header_segment, padding: false)
-      {:ok, header} = Jason.decode(decoded)
-      
+      {:ok, header} = parse_jwt_header(id_token)
       assert header["alg"] == "RS256"
-      assert header["kid"] == "8e8fc8e556f7a76d08d35829d6f90ae2e12cfd0d"
+      assert header["kid"] == @expected_kid_2
       assert header["typ"] == "JWT"
       
-      # Extract the claims
-      [_, claims_segment | _] = String.split(id_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
-      
+      {:ok, claims} = parse_jwt_claims(id_token)
       assert claims["iss"] == "https://accounts.google.com"
       assert claims["email"] == "cppcoder@gmail.com"
       assert claims["sub"] == "114460521240388371998"

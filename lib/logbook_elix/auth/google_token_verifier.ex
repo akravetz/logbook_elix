@@ -9,6 +9,11 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   @valid_issuers ["https://accounts.google.com", "accounts.google.com"]
   @cache_name :google_certs_cache
 
+  @doc """
+  Returns the list of valid token issuers for Google OAuth tokens.
+  """
+  def valid_issuers, do: @valid_issuers
+
   def verify_token(id_token) do
     with {:ok, header} <- peek_jwt_header(id_token),
          {:ok, certs} <- get_cached_or_fetch_certs(),
@@ -114,18 +119,16 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   defp validate_issuer(_), do: {:error, "Invalid token issuer"}
 
   defp validate_expiration(exp) when is_integer(exp) do
-    # For testing, we're ignoring expiration as requested
-    # In production, you would uncomment this:
-    # current_time = System.system_time(:second)
-    # if exp > current_time, do: :ok, else: {:error, "Token has expired"}
+    # NOTE: Expiration validation is disabled for testing purposes.
+    # In production, implement proper expiration checking.
     :ok
   end
 
   defp validate_expiration(_), do: {:error, "Invalid expiration claim"}
 
   defp validate_issued_at(iat) when is_integer(iat) do
-    # For testing, we're ignoring issued_at validation
-    # In production, you would validate that iat is not in the future
+    # NOTE: Issued-at validation is disabled for testing purposes.
+    # In production, implement proper issued-at checking.
     :ok
   end
 

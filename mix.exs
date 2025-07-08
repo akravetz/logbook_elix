@@ -49,7 +49,6 @@ defmodule LogbookElix.MixProject do
       {:guardian, "~> 2.3"},
       {:httpoison, "~> 2.0"},
       {:jose, "~> 1.11"},
-      {:joken, "~> 2.6"},
       {:cachex, "~> 3.6"}
     ]
   end

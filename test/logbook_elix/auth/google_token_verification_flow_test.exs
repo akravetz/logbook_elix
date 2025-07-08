@@ -1,23 +1,23 @@
 defmodule LogbookElix.Auth.GoogleTokenVerificationFlowTest do
   use LogbookElix.DataCase
 
+  alias LogbookElix.Auth.GoogleTokenVerifier
+  import JwtTestHelper
+
   @real_google_id_token "eyJhbGciOiJSUzI1NiIsImtpZCI6IjhlOGZjOGU1NTZmN2E3NmQwOGQzNTgyOWQ2ZjkwYWUyZTEyY2ZkMGQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI4MTg2OTE2MTk0MDItZXFvYjIybjNvdW05bmI5cDE0c2liNzNhaXFudmdvNGUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI4MTg2OTE2MTk0MDItZXFvYjIybjNvdW05bmI5cDE0c2liNzNhaXFudmdvNGUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ0NjA1MjEyNDAzODgzNzE5OTgiLCJlbWFpbCI6ImNwcGNvZGVyQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoiSzc4ZUMtcHc5UVZicVp6Q1o2M01fUSIsImlhdCI6MTc1MTk0MTUyMSwiZXhwIjoxNzUxOTQ1MTIxfQ.AR2eSHBK1zfABFFipU1T9iqy3EdK0fqhG3TS4OlZ4fUQL12jsXQiPeMtRRZUCVF2vPrqkfMn8gMgOZjqPaUza9aP3m6SvaYpqMb9WMhaDhvyR11Po35TENu4RvRkUNh2AXX_Pcav58h7Uo01ncB92KA1zECAWpnRnn6Y2U9EnJ8cQWUcmlpo3ZeaYzPIEnNZj03O2mwaThNphHHL2W0Lz-SabmSd_o6HGGEYTAEmyXfkIUIlIAI_jtyqQRv_UtOCKTcC0WH1uEJkCoZs6tSnHWH2abmI7UAW770UMGpZPm8l-x9hpeB_1_X1tw3d0_u-LHdeFI5SMjLkaFCT2BaMEg"
+  @expected_kid "8e8fc8e556f7a76d08d35829d6f90ae2e12cfd0d"
 
   describe "Google ID token verification" do
     test "extracts correct header information from real Google ID token" do
-      [header_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(header_segment, padding: false)
-      {:ok, header} = Jason.decode(decoded)
+      {:ok, header} = parse_jwt_header(@real_google_id_token)
 
       assert header["alg"] == "RS256"
-      assert header["kid"] == "8e8fc8e556f7a76d08d35829d6f90ae2e12cfd0d"
+      assert header["kid"] == @expected_kid
       assert header["typ"] == "JWT"
     end
 
     test "extracts correct claims from real Google ID token" do
-      [_, claims_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
+      {:ok, claims} = parse_jwt_claims(@real_google_id_token)
 
       assert claims["iss"] == "https://accounts.google.com"
       assert claims["azp"] == "818691619402-eqob22n3oum9nb9p14sib73aiqnvgo4e.apps.googleusercontent.com"
@@ -31,18 +31,8 @@ defmodule LogbookElix.Auth.GoogleTokenVerificationFlowTest do
     end
 
     test "token verification would extract correct user info" do
-      # Parse the claims
-      [_, claims_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
-
-      # Extract user info the same way our verifier does
-      user_info = %{
-        google_id: claims["sub"],
-        email: claims["email"],
-        name: claims["name"] || claims["email"],
-        profile_image_url: claims["picture"] || ""
-      }
+      {:ok, claims} = parse_jwt_claims(@real_google_id_token)
+      user_info = extract_user_info_from_claims(claims)
 
       assert user_info.google_id == "114460521240388371998"
       assert user_info.email == "cppcoder@gmail.com"
@@ -51,28 +41,17 @@ defmodule LogbookElix.Auth.GoogleTokenVerificationFlowTest do
     end
 
     test "peek_jwt_header works correctly with real token" do
-      # Test header parsing directly
-      [header_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(header_segment, padding: false)
-      {:ok, header} = Jason.decode(decoded)
-      
-      assert header["kid"] == "8e8fc8e556f7a76d08d35829d6f90ae2e12cfd0d"
+      {:ok, header} = parse_jwt_header(@real_google_id_token)
+      assert header["kid"] == @expected_kid
     end
 
     test "validates issuer correctly from real token" do
-      [_, claims_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
-
-      # The issuer should be valid
-      valid_issuers = ["https://accounts.google.com", "accounts.google.com"]
-      assert claims["iss"] in valid_issuers
+      {:ok, claims} = parse_jwt_claims(@real_google_id_token)
+      assert claims["iss"] in GoogleTokenVerifier.valid_issuers()
     end
 
     test "real token has all required fields" do
-      [_, claims_segment | _] = String.split(@real_google_id_token, ".")
-      {:ok, decoded} = Base.url_decode64(claims_segment, padding: false)
-      {:ok, claims} = Jason.decode(decoded)
+      {:ok, claims} = parse_jwt_claims(@real_google_id_token)
 
       # Check required fields
       assert Map.has_key?(claims, "sub")

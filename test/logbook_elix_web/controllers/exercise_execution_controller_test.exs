@@ -1,10 +1,11 @@
 defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   use LogbookElixWeb.ConnCase
 
-  import LogbookElix.ExecutionsFixtures
+  import LogbookElix.Factory
 
   alias LogbookElix.Executions.ExerciseExecution
 
+  # Will be merged with workout_id in tests
   @create_attrs %{
     exercise: 42,
     note: "some note",
@@ -30,7 +31,9 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
 
   describe "create exercise_execution" do
     test "renders exercise_execution when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/api/exercise_executions", exercise_execution: @create_attrs)
+      workout = insert(:workout)
+      attrs = Map.put(@create_attrs, :workout_id, workout.id)
+      conn = post(conn, ~p"/api/exercise_executions", exercise_execution: attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, ~p"/api/exercise_executions/#{id}")
@@ -50,7 +53,9 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "update exercise_execution" do
-    setup [:create_exercise_execution]
+    setup do
+      %{exercise_execution: insert(:exercise_execution)}
+    end
 
     test "renders exercise_execution when data is valid", %{conn: conn, exercise_execution: %ExerciseExecution{id: id} = exercise_execution} do
       conn = put(conn, ~p"/api/exercise_executions/#{exercise_execution}", exercise_execution: @update_attrs)
@@ -73,7 +78,9 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "delete exercise_execution" do
-    setup [:create_exercise_execution]
+    setup do
+      %{exercise_execution: insert(:exercise_execution)}
+    end
 
     test "deletes chosen exercise_execution", %{conn: conn, exercise_execution: exercise_execution} do
       conn = delete(conn, ~p"/api/exercise_executions/#{exercise_execution}")
@@ -83,10 +90,5 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
         get(conn, ~p"/api/exercise_executions/#{exercise_execution}")
       end
     end
-  end
-
-  defp create_exercise_execution(_) do
-    exercise_execution = exercise_execution_fixture()
-    %{exercise_execution: exercise_execution}
   end
 end

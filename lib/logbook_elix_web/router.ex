@@ -8,9 +8,10 @@ defmodule LogbookElixWeb.Router do
 
   scope "/api", LogbookElixWeb do
     pipe_through :api
-    
-    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
-    
+
+    # fix this later
+    # get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+
     resources "/users", UserController, only: [:index, :show, :update]
     resources "/workouts", WorkoutController, except: [:new, :edit]
     resources "/exercise_executions", ExerciseExecutionController, except: [:new, :edit]

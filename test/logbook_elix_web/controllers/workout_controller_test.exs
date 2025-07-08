@@ -1,17 +1,18 @@
 defmodule LogbookElixWeb.WorkoutControllerTest do
   use LogbookElixWeb.ConnCase
 
-  import LogbookElix.WorkoutsFixtures
+  import LogbookElix.Factory
 
   alias LogbookElix.Workouts.Workout
 
+  # Will be merged with user_id in tests
   @create_attrs %{
     finished_at: ~U[2025-07-06 05:50:00Z]
   }
   @update_attrs %{
     finished_at: ~U[2025-07-07 05:50:00Z]
   }
-  @invalid_attrs %{finished_at: nil}
+  @invalid_attrs %{user_id: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -26,7 +27,9 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
 
   describe "create workout" do
     test "renders workout when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/api/workouts", workout: @create_attrs)
+      user = insert(:user)
+      attrs = Map.put(@create_attrs, :user_id, user.id)
+      conn = post(conn, ~p"/api/workouts", workout: attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, ~p"/api/workouts/#{id}")
@@ -44,7 +47,9 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   end
 
   describe "update workout" do
-    setup [:create_workout]
+    setup do
+      %{workout: insert(:workout)}
+    end
 
     test "renders workout when data is valid", %{conn: conn, workout: %Workout{id: id} = workout} do
       conn = put(conn, ~p"/api/workouts/#{workout}", workout: @update_attrs)
@@ -65,7 +70,9 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   end
 
   describe "delete workout" do
-    setup [:create_workout]
+    setup do
+      %{workout: insert(:workout)}
+    end
 
     test "deletes chosen workout", %{conn: conn, workout: workout} do
       conn = delete(conn, ~p"/api/workouts/#{workout}")
@@ -75,10 +82,5 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
         get(conn, ~p"/api/workouts/#{workout}")
       end
     end
-  end
-
-  defp create_workout(_) do
-    workout = workout_fixture()
-    %{workout: workout}
   end
 end

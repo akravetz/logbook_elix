@@ -45,7 +45,12 @@ defmodule LogbookElix.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
-      {:open_api_spex, "~> 3.0"}
+      {:open_api_spex, "~> 3.0"},
+      {:guardian, "~> 2.3"},
+      {:httpoison, "~> 2.0"},
+      {:jose, "~> 1.11"},
+      {:cachex, "~> 3.6"},
+      {:ex_machina, "~> 2.8", only: :test}
     ]
   end
 

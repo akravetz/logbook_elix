@@ -53,7 +53,9 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "update exercise_execution" do
-    setup [:create_exercise_execution]
+    setup do
+      %{exercise_execution: insert(:exercise_execution)}
+    end
 
     test "renders exercise_execution when data is valid", %{conn: conn, exercise_execution: %ExerciseExecution{id: id} = exercise_execution} do
       conn = put(conn, ~p"/api/exercise_executions/#{exercise_execution}", exercise_execution: @update_attrs)
@@ -76,7 +78,9 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "delete exercise_execution" do
-    setup [:create_exercise_execution]
+    setup do
+      %{exercise_execution: insert(:exercise_execution)}
+    end
 
     test "deletes chosen exercise_execution", %{conn: conn, exercise_execution: exercise_execution} do
       conn = delete(conn, ~p"/api/exercise_executions/#{exercise_execution}")
@@ -86,10 +90,5 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
         get(conn, ~p"/api/exercise_executions/#{exercise_execution}")
       end
     end
-  end
-
-  defp create_exercise_execution(_) do
-    exercise_execution = insert(:exercise_execution)
-    %{exercise_execution: exercise_execution}
   end
 end

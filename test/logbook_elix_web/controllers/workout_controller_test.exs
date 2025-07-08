@@ -47,7 +47,9 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   end
 
   describe "update workout" do
-    setup [:create_workout]
+    setup do
+      %{workout: insert(:workout)}
+    end
 
     test "renders workout when data is valid", %{conn: conn, workout: %Workout{id: id} = workout} do
       conn = put(conn, ~p"/api/workouts/#{workout}", workout: @update_attrs)
@@ -68,7 +70,9 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
   end
 
   describe "delete workout" do
-    setup [:create_workout]
+    setup do
+      %{workout: insert(:workout)}
+    end
 
     test "deletes chosen workout", %{conn: conn, workout: workout} do
       conn = delete(conn, ~p"/api/workouts/#{workout}")
@@ -78,10 +82,5 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
         get(conn, ~p"/api/workouts/#{workout}")
       end
     end
-  end
-
-  defp create_workout(_) do
-    workout = insert(:workout)
-    %{workout: workout}
   end
 end

@@ -16,8 +16,6 @@ defmodule LogbookElix.Application do
       {Finch, name: LogbookElix.Finch},
       # Start Cachex for Google certificates caching
       {Cachex, name: :google_certs_cache},
-      # Start a worker by calling: LogbookElix.Worker.start_link(arg)
-      # {LogbookElix.Worker, arg},
       # Start to serve requests, typically the last entry
       LogbookElixWeb.Endpoint
     ]

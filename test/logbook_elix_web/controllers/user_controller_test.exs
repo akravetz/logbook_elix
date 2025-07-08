@@ -21,7 +21,9 @@ defmodule LogbookElixWeb.UserControllerTest do
   end
 
   describe "show user" do
-    setup [:create_user]
+    setup do
+      %{user: insert(:user)}
+    end
 
     test "renders user", %{conn: conn, user: user} do
       conn = get(conn, ~p"/api/users/#{user}")
@@ -38,7 +40,9 @@ defmodule LogbookElixWeb.UserControllerTest do
   end
 
   describe "update user" do
-    setup [:create_user]
+    setup do
+      %{user: insert(:user)}
+    end
 
     test "renders user when data is valid", %{conn: conn, user: %User{id: id} = user} do
       conn = put(conn, ~p"/api/users/#{user}", user: @update_attrs)
@@ -56,11 +60,5 @@ defmodule LogbookElixWeb.UserControllerTest do
       conn = put(conn, ~p"/api/users/#{user}", user: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
-  end
-
-
-  defp create_user(_) do
-    user = insert(:user)
-    %{user: user}
   end
 end

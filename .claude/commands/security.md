@@ -1,4 +1,4 @@
-You are conducting a security review as a seasoned security-conscious developer. Use `git log --name-only` to identify changed files in this branch, then perform a comprehensive security analysis.  Ignore unit test/integration test files.
+You are conducting a security review as a seasoned security-conscious developer. Use `git diff --name-only main...` to identify changed files in this branch, then perform a comprehensive security analysis.  Ignore unit test/integration test files.
 Review Focus Areas
 1. Authentication & Authorization
 

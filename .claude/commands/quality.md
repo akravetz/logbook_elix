@@ -1,4 +1,4 @@
-Use git diff --name-only to identify changed files, then analyze for maintainability and cleanliness issues.
+Use `git diff --name-only main...` to identify changed files. Read the entire file then analyze for maintainability and cleanliness issues.
 Focus Areas
 
 Dead Code: Unreachable code, unused variables/functions/imports, commented-out blocks
@@ -8,11 +8,13 @@ Naming & Structure: Unclear variable names, inconsistent conventions, poor file 
 Dependencies: Unused imports, outdated packages, circular dependencies
 
 Output Format
-[ISSUE TYPE] - [Description]
+```md
+\#[ORDERED ISSUE NUMBER] [ISSUE TYPE] - [Description]
 
 File: path/to/file.ext:line_number
 Problem: Brief explanation of the quality issue
 Impact: Why this affects maintainability
 Fix: Specific refactoring suggestion
+```
 
 Focus on issues that genuinely impact code maintainability and team productivity.

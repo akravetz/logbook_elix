@@ -18,13 +18,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
 
   describe "verify_token/1" do
 
-    test "verifies a valid token and extracts user info" do
-      # Note: In a real test, we would need to:
-      # 1. Mock the HTTPoison.get call to return our mock certificates
-      # 2. Create a properly signed JWT using the test certificate
-      # 3. Verify the full flow
-      
-      # For now, we'll test the individual components
+    test "extracts user info from valid claims" do
       user_info = extract_user_info_from_claims(@mock_jwt_claims)
       assert user_info.email == "cppcoder@gmail.com"
       assert user_info.google_id == "1234567890"
@@ -40,34 +34,13 @@ defmodule LogbookElix.Auth.GoogleTokenVerifierTest do
       assert {:error, "Invalid JWT format"} = GoogleTokenVerifier.verify_token("only.two")
     end
 
-    test "validates required fields in claims" do
-      claims_missing_email = Map.delete(@mock_jwt_claims, "email")
-      assert {:error, "Missing required claims"} = validate_claims_fields(claims_missing_email)
-
-      claims_missing_sub = Map.delete(@mock_jwt_claims, "sub")
-      assert {:error, "Missing required claims"} = validate_claims_fields(claims_missing_sub)
+    test "validates issuer correctly" do
+      valid_issuers = GoogleTokenVerifier.valid_issuers()
+      
+      assert "https://accounts.google.com" in valid_issuers
+      assert "accounts.google.com" in valid_issuers
+      refute "https://evil.com" in valid_issuers
     end
-
-    defp validate_claims_fields(claims) do
-      required_fields = ["sub", "email"]
-
-      if Enum.all?(required_fields, &Map.has_key?(claims, &1)) do
-        :ok
-      else
-        {:error, "Missing required claims"}
-      end
-    end
-
-    test "validates issuer" do
-      valid_claims = @mock_jwt_claims
-      assert :ok = validate_issuer_claim(valid_claims["iss"])
-
-      invalid_claims = Map.put(@mock_jwt_claims, "iss", "https://invalid.com")
-      assert {:error, "Invalid token issuer"} = validate_issuer_claim(invalid_claims["iss"])
-    end
-
-    defp validate_issuer_claim(iss) when iss in ["https://accounts.google.com", "accounts.google.com"], do: :ok
-    defp validate_issuer_claim(_), do: {:error, "Invalid token issuer"}
 
     test "handles missing name gracefully" do
       claims_without_name = Map.delete(@mock_jwt_claims, "name")

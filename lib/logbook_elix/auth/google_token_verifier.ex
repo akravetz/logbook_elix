@@ -119,17 +119,27 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   defp validate_issuer(_), do: {:error, "Invalid token issuer"}
 
   defp validate_expiration(exp) when is_integer(exp) do
-    # NOTE: Expiration validation is disabled for testing purposes.
-    # In production, implement proper expiration checking.
-    :ok
+    current_time = System.system_time(:second)
+    
+    if exp > current_time do
+      :ok
+    else
+      {:error, "Token has expired"}
+    end
   end
 
   defp validate_expiration(_), do: {:error, "Invalid expiration claim"}
 
   defp validate_issued_at(iat) when is_integer(iat) do
-    # NOTE: Issued-at validation is disabled for testing purposes.
-    # In production, implement proper issued-at checking.
-    :ok
+    current_time = System.system_time(:second)
+    # Allow 5 minutes of clock skew
+    max_skew = 300
+    
+    if iat <= current_time + max_skew do
+      :ok
+    else
+      {:error, "Token issued in the future"}
+    end
   end
 
   defp validate_issued_at(_), do: {:error, "Invalid issued_at claim"}
@@ -144,7 +154,10 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
     end
   end
 
-  defp extract_user_info(claims) do
+  @doc """
+  Extracts user info from JWT claims.
+  """
+  def extract_user_info(claims) do
     %{
       google_id: claims["sub"],
       email: claims["email"],

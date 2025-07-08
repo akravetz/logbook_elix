@@ -3,33 +3,28 @@ defmodule JwtTestHelper do
   Helper functions for JWT testing across different test modules.
   """
 
+
   @doc """
   Parses JWT header from a token string.
   """
   def parse_jwt_header(token) do
-    case String.split(token, ".") do
-      [header_segment | _] ->
-        with {:ok, decoded} <- Base.url_decode64(header_segment, padding: false),
-             {:ok, header} <- Jason.decode(decoded) do
-          {:ok, header}
-        else
-          _ -> {:error, "Invalid JWT format"}
-        end
-
-      _ ->
-        {:error, "Invalid JWT format"}
-    end
+    parse_jwt_segment(token, 0)
   end
 
   @doc """
   Parses JWT claims from a token string.
   """
   def parse_jwt_claims(token) do
+    parse_jwt_segment(token, 1)
+  end
+
+  defp parse_jwt_segment(token, segment_index) do
     case String.split(token, ".") do
-      [_, claims_segment | _] ->
-        with {:ok, decoded} <- Base.url_decode64(claims_segment, padding: false),
-             {:ok, claims} <- Jason.decode(decoded) do
-          {:ok, claims}
+      segments when length(segments) >= segment_index + 1 ->
+        segment = Enum.at(segments, segment_index)
+        with {:ok, decoded} <- Base.url_decode64(segment, padding: false),
+             {:ok, parsed} <- Jason.decode(decoded) do
+          {:ok, parsed}
         else
           _ -> {:error, "Invalid JWT format"}
         end
@@ -43,11 +38,6 @@ defmodule JwtTestHelper do
   Extracts user info from JWT claims using the same logic as the verifier.
   """
   def extract_user_info_from_claims(claims) do
-    %{
-      google_id: claims["sub"],
-      email: claims["email"],
-      name: claims["name"] || claims["email"],
-      profile_image_url: claims["picture"] || ""
-    }
+    LogbookElix.Auth.GoogleTokenVerifier.extract_user_info(claims)
   end
 end

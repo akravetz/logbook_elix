@@ -6,7 +6,7 @@ defmodule LogbookElix.Executions.ExerciseExecution do
     field :exercise, :integer
     field :note, :string
     field :exercise_order, :integer
-    
+
     belongs_to :workout, LogbookElix.Workouts.Workout
     has_many :sets, LogbookElix.Sets.Set
 

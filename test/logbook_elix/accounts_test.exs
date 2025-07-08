@@ -8,7 +8,13 @@ defmodule LogbookElix.AccountsTest do
   describe "users" do
     alias LogbookElix.Accounts.User
 
-    @invalid_attrs %{name: nil, email_address: nil, google_id: nil, profile_image_url: nil, is_active: nil}
+    @invalid_attrs %{
+      name: nil,
+      email_address: nil,
+      google_id: nil,
+      profile_image_url: nil,
+      is_active: nil
+    }
 
     test "list_users/0 returns all users" do
       user = insert(:user)

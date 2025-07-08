@@ -101,4 +101,51 @@ defmodule LogbookElix.Accounts do
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
   end
+
+  @doc """
+  Gets a user by email address.
+
+  ## Examples
+
+      iex> get_user_by_email("user@example.com")
+      %User{}
+
+      iex> get_user_by_email("nonexistent@example.com")
+      nil
+
+  """
+  def get_user_by_email(email) do
+    from(u in User,
+      where: u.email_address == ^email,
+      where: u.is_active == true
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Finds or creates a user by email address with Google user info.
+
+  ## Examples
+
+      iex> find_or_create_user_by_email(%{email: "user@example.com", google_id: "123", name: "User"})
+      {:ok, %User{}}
+
+  """
+  def find_or_create_user_by_email(user_info) do
+    attrs = %{
+      email_address: user_info.email,
+      google_id: user_info.google_id,
+      name: user_info.name,
+      profile_image_url: user_info.profile_image_url,
+      is_active: true
+    }
+
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace, [:google_id, :name, :profile_image_url, :is_active]},
+      conflict_target: :email_address,
+      returning: true
+    )
+  end
 end

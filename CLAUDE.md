@@ -69,8 +69,39 @@ Phoenix contexts organize related functionality:
 - API spec available at `/api/openapi`
 - All controllers inherit OpenApiSpex behavior via `LogbookElixWeb` controller macro
 
-### Authentication Flow (Future Implementation)
-Frontend handles Google OAuth → Backend verifies Google token → Returns JWT for API access. JWT expires after 3 hours to avoid refresh token complexity.
+### Authentication Implementation
+**Context**: The application uses Guardian JWT authentication with Google OAuth integration.
+
+**Pattern**: Frontend handles Google OAuth flow and sends tokens to backend for verification and JWT generation.
+
+#### Authentication Flow
+1. Frontend handles Google OAuth and obtains Google ID token
+2. Frontend sends token to `/api/auth/verify-google-token`
+3. Backend verifies Google token using `LogbookElix.Auth.GoogleTokenVerifier`
+4. Backend creates or finds user by email from Google profile
+5. Backend generates JWT token using Guardian (3-hour expiration)
+6. Frontend uses JWT for all subsequent API calls
+
+#### Guardian Configuration
+```elixir
+# Guardian module
+defmodule LogbookElix.Auth.Guardian do
+  use Guardian, otp_app: :logbook_elix
+  
+  def subject_for_token(user, _claims), do: {:ok, to_string(user.id)}
+  def resource_from_claims(%{"sub" => id}), do: {:ok, Accounts.get_user!(id)}
+end
+
+# Router pipeline
+pipeline :auth do
+  plug Guardian.Plug.Pipeline, module: LogbookElix.Auth.Guardian
+  plug Guardian.Plug.VerifyHeader, scheme: "Bearer"
+  plug Guardian.Plug.EnsureAuthenticated
+  plug Guardian.Plug.LoadResource
+end
+```
+
+**Rationale**: JWT tokens expire after 3 hours to avoid refresh token complexity while maintaining reasonable session length.
 
 ## Database Schema Notes
 - All models use UTC timestamps (`:utc_datetime`)
@@ -105,6 +136,32 @@ def create(conn, %{"workout" => workout_params}) do
   end
 end
 ```
+
+#### Authentication Error Handling
+**Context**: Authentication endpoints need to handle Google token verification errors and JWT operations.
+
+**Pattern**: Extend FallbackController to handle authentication-specific error patterns.
+```elixir
+# In FallbackController
+def call(conn, {:error, error_message}) when is_binary(error_message) do
+  conn
+  |> put_status(:unauthorized)
+  |> json(%{error: error_message})
+end
+
+# Auth controller using with statements
+def verify_google_token(conn, %{"google_token" => google_token}) do
+  with {:ok, user_info} <- GoogleTokenVerifier.verify_token(google_token),
+       {:ok, user} <- Accounts.find_or_create_user_by_email(user_info),
+       {:ok, jwt, _claims} <- Guardian.encode_and_sign(user) do
+    conn
+    |> put_status(:ok)
+    |> json(%{jwt: jwt, user: %{...}})
+  end
+end
+```
+
+**Rationale**: Consistent error handling across all endpoints while supporting authentication-specific error types.
 
 ## Database Development
 
@@ -275,6 +332,47 @@ assert found_execution == exercise_execution  # Fails due to association loading
 
 **Avoid**: Exact equality assertions between ExMachina-created records and context function results.
 
+### Authentication Testing Patterns
+**Context**: All API endpoints require authentication, so tests need authenticated connections.
+
+**Pattern**: Use centralized authentication test helper for consistent JWT token setup.
+```elixir
+# test/support/auth_test_helper.ex
+defmodule LogbookElixWeb.AuthTestHelper do
+  import LogbookElix.Factory
+  alias LogbookElix.Auth.Guardian
+
+  def authenticated_conn(conn) do
+    user = insert(:user)
+    {:ok, jwt, _claims} = Guardian.encode_and_sign(user)
+    
+    conn
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
+  end
+
+  def authenticated_conn(conn, user) do
+    {:ok, jwt, _claims} = Guardian.encode_and_sign(user)
+    
+    conn
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{jwt}")
+  end
+end
+
+# In controller tests
+setup %{conn: conn} do
+  conn = 
+    conn
+    |> put_req_header("accept", "application/json")
+    |> authenticated_conn()
+  
+  {:ok, conn: conn}
+end
+```
+
+**Rationale**: Eliminates authentication setup duplication across test files and ensures consistent token generation.
+
+**Avoid**: Manual JWT token creation in individual test files or skipping authentication in protected endpoint tests.
+
 ## Code Quality & Maintenance
 
 ### JWT Testing Patterns
@@ -346,11 +444,14 @@ LogbookElixWeb.Endpoint
 **Rationale**: Dead code creates confusion about system functionality and clutters the codebase.
 
 ## Key Files
-- `lib/logbook_elix_web/router.ex` - API route definitions
+- `lib/logbook_elix_web/router.ex` - API route definitions with authentication pipeline
 - `lib/logbook_elix_web/controllers/api_spec.ex` - OpenAPI specification  
 - `lib/logbook_elix/auth/google_token_verifier.ex` - Google OAuth token verification
+- `lib/logbook_elix/auth/guardian.ex` - JWT authentication module
+- `lib/logbook_elix_web/controllers/auth_controller.ex` - Authentication endpoints
+- `lib/logbook_elix_web/auth_error_handler.ex` - Guardian authentication error handling
 - `test/support/factory.ex` - ExMachina factories for test data
-- `test/support/jwt_test_helper.ex` - Shared JWT testing utilities
+- `test/support/auth_test_helper.ex` - Authentication testing utilities
 - `docs/project_plan.md` - Complete project requirements and frontend architecture
 - `docs/models.md` - Original data model definitions
 
@@ -380,3 +481,33 @@ LogbookElixWeb.Endpoint
 - Poor naming conventions
 
 **Avoid**: Allowing quality issues to accumulate - address them during feature development rather than in separate cleanup phases.
+
+### Authentication Implementation Patterns
+**Context**: Adding JWT authentication to existing API requires careful router configuration and test updates.
+
+**Pattern**: Systematic implementation approach for authentication integration.
+```bash
+# Authentication implementation sequence:
+1. Create Guardian module with user resource handling
+2. Configure Guardian in config files (dev/prod environments)
+3. Add authentication pipeline to router with proper plug order
+4. Create AuthController with proper error handling patterns
+5. Enhance Accounts context for user lookup/creation
+6. Create AuthTestHelper for consistent test authentication
+7. Update ALL controller tests to use authenticated connections
+8. Add comprehensive auth controller tests
+```
+
+**Key Lessons**:
+- **Router Pipeline Order**: Guardian plugs must be in correct sequence (Pipeline → VerifyHeader → EnsureAuthenticated → LoadResource)
+- **Deprecated Options**: Use `:scheme` instead of `:realm` in Guardian.Plug.VerifyHeader
+- **Route Organization**: Separate public auth routes from protected API routes using different scopes
+- **Error Handling**: Extend FallbackController to handle authentication-specific error types (string errors from token verification)
+- **Test Authentication**: Centralized auth helper prevents test code duplication and ensures consistent JWT token creation
+- **User Creation**: `find_or_create_user_by_email/1` pattern handles OAuth user registration seamlessly
+
+**Avoid**: 
+- Manual JWT token creation in individual tests
+- Inconsistent error handling between auth and non-auth endpoints  
+- Putting logout endpoint in public routes (it requires authentication)
+- Forgetting to update existing controller tests when adding authentication

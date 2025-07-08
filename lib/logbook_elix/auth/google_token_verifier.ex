@@ -120,7 +120,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
 
   defp validate_expiration(exp) when is_integer(exp) do
     current_time = System.system_time(:second)
-    
+
     if exp > current_time do
       :ok
     else
@@ -134,7 +134,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
     current_time = System.system_time(:second)
     # Allow 5 minutes of clock skew
     max_skew = 300
-    
+
     if iat <= current_time + max_skew do
       :ok
     else

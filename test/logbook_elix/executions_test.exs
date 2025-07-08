@@ -32,7 +32,9 @@ defmodule LogbookElix.ExecutionsTest do
       workout = insert(:workout)
       valid_attrs = params_for(:exercise_execution) |> Map.put(:workout_id, workout.id)
 
-      assert {:ok, %ExerciseExecution{} = exercise_execution} = Executions.create_exercise_execution(valid_attrs)
+      assert {:ok, %ExerciseExecution{} = exercise_execution} =
+               Executions.create_exercise_execution(valid_attrs)
+
       assert exercise_execution.exercise == valid_attrs.exercise
       assert exercise_execution.note == valid_attrs.note
       assert exercise_execution.exercise_order == valid_attrs.exercise_order
@@ -47,7 +49,9 @@ defmodule LogbookElix.ExecutionsTest do
       exercise_execution = insert(:exercise_execution)
       update_attrs = %{exercise: 43, note: "some updated note", exercise_order: 43}
 
-      assert {:ok, %ExerciseExecution{} = exercise_execution} = Executions.update_exercise_execution(exercise_execution, update_attrs)
+      assert {:ok, %ExerciseExecution{} = exercise_execution} =
+               Executions.update_exercise_execution(exercise_execution, update_attrs)
+
       assert exercise_execution.exercise == 43
       assert exercise_execution.note == "some updated note"
       assert exercise_execution.exercise_order == 43
@@ -55,7 +59,10 @@ defmodule LogbookElix.ExecutionsTest do
 
     test "update_exercise_execution/2 with invalid data returns error changeset" do
       exercise_execution = insert(:exercise_execution)
-      assert {:error, %Ecto.Changeset{}} = Executions.update_exercise_execution(exercise_execution, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Executions.update_exercise_execution(exercise_execution, @invalid_attrs)
+
       found_execution = Executions.get_exercise_execution!(exercise_execution.id)
       assert found_execution.id == exercise_execution.id
       assert found_execution.exercise == exercise_execution.exercise
@@ -63,8 +70,13 @@ defmodule LogbookElix.ExecutionsTest do
 
     test "delete_exercise_execution/1 deletes the exercise_execution" do
       exercise_execution = insert(:exercise_execution)
-      assert {:ok, %ExerciseExecution{}} = Executions.delete_exercise_execution(exercise_execution)
-      assert_raise Ecto.NoResultsError, fn -> Executions.get_exercise_execution!(exercise_execution.id) end
+
+      assert {:ok, %ExerciseExecution{}} =
+               Executions.delete_exercise_execution(exercise_execution)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Executions.get_exercise_execution!(exercise_execution.id)
+      end
     end
 
     test "change_exercise_execution/1 returns a exercise_execution changeset" do

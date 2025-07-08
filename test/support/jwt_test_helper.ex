@@ -3,7 +3,6 @@ defmodule JwtTestHelper do
   Helper functions for JWT testing across different test modules.
   """
 
-
   @doc """
   Parses JWT header from a token string.
   """
@@ -22,6 +21,7 @@ defmodule JwtTestHelper do
     case String.split(token, ".") do
       segments when length(segments) >= segment_index + 1 ->
         segment = Enum.at(segments, segment_index)
+
         with {:ok, decoded} <- Base.url_decode64(segment, padding: false),
              {:ok, parsed} <- Jason.decode(decoded) do
           {:ok, parsed}

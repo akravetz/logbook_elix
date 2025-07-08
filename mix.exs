@@ -50,7 +50,8 @@ defmodule LogbookElix.MixProject do
       {:httpoison, "~> 2.0"},
       {:jose, "~> 1.11"},
       {:cachex, "~> 3.6"},
-      {:ex_machina, "~> 2.8", only: :test}
+      {:ex_machina, "~> 2.8", only: :test},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

@@ -6,7 +6,7 @@ defmodule LogbookElix.Sets.Set do
     field :weight, :float
     field :clean_reps, :integer
     field :forced_reps, :integer, default: 0
-    
+
     belongs_to :exercise_execution, LogbookElix.Executions.ExerciseExecution
 
     timestamps(type: :utc_datetime)

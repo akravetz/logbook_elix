@@ -36,3 +36,6 @@ config :phoenix, :plug_init_mode, :runtime
 config :logbook_elix, LogbookElix.Auth.Guardian,
   secret_key: "test-secret-key-change-in-production",
   ttl: {3, :hours}
+
+# DeepGram API configuration for testing
+config :logbook_elix, :deepgram_api_key, "test-deepgram-api-key"

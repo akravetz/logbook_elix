@@ -16,6 +16,8 @@ defmodule LogbookElix.Application do
       {Finch, name: LogbookElix.Finch},
       # Start Cachex for Google certificates caching
       {Cachex, name: :google_certs_cache},
+      # Start Hammer rate limiter
+      {LogbookElix.RateLimiter, [clean_period: :timer.minutes(1)]},
       # Start to serve requests, typically the last entry
       LogbookElixWeb.Endpoint
     ]

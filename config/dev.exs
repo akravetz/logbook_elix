@@ -69,3 +69,9 @@ config :swoosh, :api_client, false
 config :logbook_elix, LogbookElix.Auth.Guardian,
   secret_key: "dev-secret-key-change-in-production",
   ttl: {3, :hours}
+
+# DeepGram API configuration for development
+# You can override this by setting DEEPGRAM_API_KEY environment variable
+config :logbook_elix,
+       :deepgram_api_key,
+       System.get_env("DEEPGRAM_API_KEY") || "your-dev-deepgram-api-key-here"

@@ -43,19 +43,29 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   end
 
   defp fetch_and_cache_certs do
-    case HTTPoison.get(@google_certs_url) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, certs} ->
+    case Req.get(@google_certs_url) do
+      {:ok, %Req.Response{status: 200, body: body}} ->
+        certs =
+          if is_binary(body) do
+            case Jason.decode(body) do
+              {:ok, parsed} -> parsed
+              {:error, _} -> nil
+            end
+          else
+            body
+          end
+
+        case certs do
+          nil ->
+            {:error, "Failed to parse Google certificates"}
+
+          certs ->
             # Cache for 1 hour
             Cachex.put(@cache_name, @cache_key, certs, ttl: :timer.hours(1))
             {:ok, certs}
-
-          {:error, _} ->
-            {:error, "Failed to parse Google certificates"}
         end
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
+      {:error, %Req.TransportError{reason: reason}} ->
         {:error, "Failed to fetch Google certificates: #{inspect(reason)}"}
     end
   end

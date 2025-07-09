@@ -22,32 +22,45 @@ defmodule LogbookElix.Services.DeepgramClient do
       {"Content-Type", content_type}
     ]
 
-    case HTTPoison.post(@deepgram_api_url, audio_data, headers, recv_timeout: @timeout) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+    case Req.post(@deepgram_api_url,
+           body: audio_data,
+           headers: headers,
+           receive_timeout: @timeout
+         ) do
+      {:ok, %Req.Response{status: 200, body: body}} ->
         parse_transcription_response(body)
 
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
-        Logger.error("DeepGram API error: #{status_code} - #{body}")
+      {:ok, %Req.Response{status: status_code, body: body}} ->
+        body_str = if is_binary(body), do: body, else: Jason.encode!(body)
+        Logger.error("DeepGram API error: #{status_code} - #{body_str}")
         {:error, "DeepGram API error: #{status_code}"}
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
+      {:error, %Req.TransportError{reason: reason}} ->
         Logger.error("HTTP request failed: #{inspect(reason)}")
         {:error, "Failed to connect to DeepGram API"}
     end
   end
 
   @doc false
-  def parse_transcription_response(body) do
+  def parse_transcription_response(body) when is_binary(body) do
     case Jason.decode(body) do
-      {:ok, %{"results" => %{"channels" => [%{"alternatives" => [alternative | _]} | _]}}} ->
-        {:ok, alternative}
-
-      {:ok, _} ->
-        {:error, "Unexpected response format from DeepGram"}
-
-      {:error, _} ->
-        {:error, "Failed to parse DeepGram response"}
+      {:ok, data} -> parse_transcription_data(data)
+      {:error, _} -> {:error, "Failed to parse DeepGram response"}
     end
+  end
+
+  def parse_transcription_response(body) when is_map(body) do
+    parse_transcription_data(body)
+  end
+
+  defp parse_transcription_data(%{
+         "results" => %{"channels" => [%{"alternatives" => [alternative | _]} | _]}
+       }) do
+    {:ok, alternative}
+  end
+
+  defp parse_transcription_data(_) do
+    {:error, "Unexpected response format from DeepGram"}
   end
 
   defp get_api_key do

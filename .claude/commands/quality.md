@@ -1,4 +1,4 @@
-Use `git diff --name-only main...` to identify changed files. Read the entire file then analyze for maintainability and cleanliness issues.
+Use `git diff --name-only main...` to identify changed files. Read the entire file then analyze for maintainability and cleanliness issues.  Ignore files in the `.claude`, `docs`, `plan` directory. Also ignore `mix.exs`
 
 Follow elixir patterns documented in @docs/elixir_conventions.md
 

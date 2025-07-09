@@ -103,6 +103,25 @@ end
 
 **Rationale**: JWT tokens expire after 3 hours to avoid refresh token complexity while maintaining reasonable session length.
 
+### Speech-to-Text Transcription
+**Context**: The application provides a helper API for transcribing audio to text using DeepGram.
+
+**Pattern**: Protected endpoint with rate limiting for audio transcription.
+
+#### Features
+- Accepts audio files (wav, mp3, m4a, webm) up to 100MB
+- Rate limited to 10 requests per minute per user using Hammer
+- Returns simplified transcription from DeepGram
+- No database storage - pure API proxy
+
+#### Configuration
+```elixir
+# In dev/test/prod.exs
+config :logbook_elix, :deepgram_api_key, "your-api-key"
+```
+
+**Implementation**: Uses streaming to avoid memory issues with large audio files.
+
 ## Database Schema Notes
 - All models use UTC timestamps (`:utc_datetime`)
 - Integer primary keys on all tables
@@ -450,6 +469,10 @@ LogbookElixWeb.Endpoint
 - `lib/logbook_elix/auth/guardian.ex` - JWT authentication module
 - `lib/logbook_elix_web/controllers/auth_controller.ex` - Authentication endpoints
 - `lib/logbook_elix_web/auth_error_handler.ex` - Guardian authentication error handling
+- `lib/logbook_elix_web/controllers/transcription_controller.ex` - Speech-to-text transcription endpoint
+- `lib/logbook_elix/services/deepgram_client.ex` - DeepGram API integration
+- `lib/logbook_elix_web/plugs/rate_limiter.ex` - Rate limiting plug using Hammer
+- `lib/logbook_elix/rate_limiter.ex` - Hammer rate limiter module configuration
 - `test/support/factory.ex` - ExMachina factories for test data
 - `test/support/auth_test_helper.ex` - Authentication testing utilities
 - `docs/project_plan.md` - Complete project requirements and frontend architecture

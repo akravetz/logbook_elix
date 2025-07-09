@@ -77,6 +77,16 @@ if config_env() == :prod do
     secret_key: guardian_secret_key,
     ttl: {3, :hours}
 
+  # DeepGram API configuration for production
+  deepgram_api_key =
+    System.get_env("DEEPGRAM_API_KEY") ||
+      raise """
+      environment variable DEEPGRAM_API_KEY is missing.
+      You can get an API key at https://deepgram.com
+      """
+
+  config :logbook_elix, :deepgram_api_key, deepgram_api_key
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

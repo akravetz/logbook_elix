@@ -5,9 +5,12 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
 
   require Logger
 
+  alias LogbookElix.Utils.JWT
+
   @google_certs_url "https://www.googleapis.com/oauth2/v1/certs"
   @valid_issuers ["https://accounts.google.com", "accounts.google.com"]
   @cache_name :google_certs_cache
+  @cache_key "google_certs"
 
   @doc """
   Returns the list of valid token issuers for Google OAuth tokens.
@@ -15,7 +18,7 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   def valid_issuers, do: @valid_issuers
 
   def verify_token(id_token) do
-    with {:ok, header} <- peek_jwt_header(id_token),
+    with {:ok, header} <- JWT.parse_header(id_token),
          {:ok, certs} <- get_cached_or_fetch_certs(),
          {:ok, jwk} <- find_cert_by_kid(certs, header["kid"]),
          {:ok, claims} <- verify_and_decode_jwt(id_token, jwk),
@@ -26,23 +29,8 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
     end
   end
 
-  defp peek_jwt_header(token) do
-    case String.split(token, ".") do
-      [header_segment | _] ->
-        with {:ok, decoded} <- Base.url_decode64(header_segment, padding: false),
-             {:ok, header} <- Jason.decode(decoded) do
-          {:ok, header}
-        else
-          _ -> {:error, "Invalid JWT format"}
-        end
-
-      _ ->
-        {:error, "Invalid JWT format"}
-    end
-  end
-
   defp get_cached_or_fetch_certs do
-    case Cachex.get(@cache_name, "google_certs") do
+    case Cachex.get(@cache_name, @cache_key) do
       {:ok, nil} ->
         fetch_and_cache_certs()
 
@@ -55,19 +43,29 @@ defmodule LogbookElix.Auth.GoogleTokenVerifier do
   end
 
   defp fetch_and_cache_certs do
-    case HTTPoison.get(@google_certs_url) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        case Jason.decode(body) do
-          {:ok, certs} ->
-            # Cache for 1 hour
-            Cachex.put(@cache_name, "google_certs", certs, ttl: :timer.hours(1))
-            {:ok, certs}
+    case Req.get(@google_certs_url) do
+      {:ok, %Req.Response{status: 200, body: body}} ->
+        certs =
+          if is_binary(body) do
+            case Jason.decode(body) do
+              {:ok, parsed} -> parsed
+              {:error, _} -> nil
+            end
+          else
+            body
+          end
 
-          {:error, _} ->
+        case certs do
+          nil ->
             {:error, "Failed to parse Google certificates"}
+
+          certs ->
+            # Cache for 1 hour
+            Cachex.put(@cache_name, @cache_key, certs, ttl: :timer.hours(1))
+            {:ok, certs}
         end
 
-      {:error, %HTTPoison.Error{reason: reason}} ->
+      {:error, %Req.TransportError{reason: reason}} ->
         {:error, "Failed to fetch Google certificates: #{inspect(reason)}"}
     end
   end

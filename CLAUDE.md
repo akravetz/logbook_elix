@@ -534,3 +534,110 @@ LogbookElixWeb.Endpoint
 - Inconsistent error handling between auth and non-auth endpoints  
 - Putting logout endpoint in public routes (it requires authentication)
 - Forgetting to update existing controller tests when adding authentication
+
+### Feature Implementation with Foreign Key Relationships
+**Context**: Adding new entities with foreign key relationships to existing schemas requires careful migration and test updates.
+
+**Pattern**: Systematic approach for implementing features with complex relationships.
+```bash
+# Exercise feature implementation sequence:
+1. Generate resource with Phoenix generator
+2. Update migration to use proper column types (:text, UTC timestamps, indexes)
+3. Update schema with Ecto.Enum and proper relationships
+4. Implement context with authorization patterns
+5. Update controller with authentication and proper error handling
+6. Add routes to authenticated scope
+7. Create migration to update related schemas (ExerciseExecution)
+8. Update related schema to use foreign key relationship
+9. Update all tests and factories
+10. Fix JSON encoding for associated data
+```
+
+**Key Lessons**:
+- **Migration Strategy**: Always use `:text` for strings, UTC timestamps, and proper foreign key constraints
+- **Schema Updates**: Replace integer fields with `belongs_to` relationships when adding proper foreign keys
+- **Test Data**: Convert from Phoenix fixtures to ExMachina factories for complex relationships
+- **JSON Encoding**: Add `@derive {Jason.Encoder, except: [:__meta__, :association]}` for structs included in API responses
+- **Preloading**: Include necessary associations in context functions for JSON serialization
+- **Authorization**: User context determines access - implement consistent patterns across all CRUD operations
+
+**Avoid**:
+- Using integer IDs when proper foreign key relationships should be used
+- Mixing atom and string keys in test data - stick to string keys for context functions
+- Forgetting to add Jason.Encoder to schemas that get serialized in API responses
+- Manual parameter conversion in controllers - Phoenix handles JSON to string keys automatically
+
+### JSON API Response Design
+**Context**: API responses should include related data efficiently while controlling what gets exposed.
+
+**Pattern**: Use JSON view functions to control serialization and include necessary associations.
+```elixir
+# ✅ ExerciseExecution with Exercise and Sets
+defp data(%ExerciseExecution{} = exercise_execution) do
+  %{
+    id: exercise_execution.id,
+    exercise: exercise_execution.exercise,    # Full exercise data
+    note: exercise_execution.note,
+    exercise_order: exercise_execution.exercise_order,
+    sets: exercise_execution.sets            # All associated sets
+  }
+end
+
+# ✅ Schema with proper JSON encoding
+@derive {Jason.Encoder, except: [:__meta__, :created_by_user]}
+schema "exercises" do
+  # ...
+end
+```
+
+**Rationale**: 
+- JSON views provide explicit control over API response structure
+- Preloading in context functions supports both business logic and API serialization
+- Jason.Encoder exclusions prevent sensitive data exposure and association loading errors
+- Rich API responses reduce frontend API calls
+
+**Avoid**:
+- Exposing all schema fields without consideration for security
+- Including unloaded associations in JSON responses
+- Missing Jason.Encoder implementations for schemas used in API responses
+
+### Testing Phoenix Contexts with Authorization
+**Context**: Testing authorization logic requires proper user context and association handling.
+
+**Pattern**: Compare specific fields instead of full objects when testing ExMachina-created records.
+```elixir
+# ✅ Test authorization and specific fields
+test "list_exercises/1 returns system exercises and user's exercises" do
+  user = insert(:user)
+  system_exercise = insert(:system_exercise)
+  user_exercise = insert(:exercise, created_by_user: user)
+  _other_user_exercise = insert(:exercise, created_by_user: insert(:user))
+
+  exercises = Exercises.list_exercises(user.id)
+  
+  assert length(exercises) == 2
+  exercise_ids = Enum.map(exercises, & &1.id)
+  assert system_exercise.id in exercise_ids
+  assert user_exercise.id in exercise_ids
+end
+
+# ✅ Use string keys for context function parameters
+test "create_exercise/2 with valid data creates a exercise" do
+  user = insert(:user)
+  valid_attrs = %{"name" => "Test Exercise", "body_part" => "chest", "modality" => "barbell"}
+
+  assert {:ok, %Exercise{} = exercise} = Exercises.create_exercise(valid_attrs, user.id)
+  assert exercise.name == "Test Exercise"
+  assert exercise.created_by_user_id == user.id
+end
+```
+
+**Rationale**: 
+- ID comparisons avoid association loading mismatches between ExMachina and context functions
+- String keys match what Phoenix controllers pass to context functions
+- Authorization testing ensures security boundaries are properly enforced
+
+**Avoid**:
+- Comparing full ExMachina objects with context function results (association loading differences)
+- Using atom keys in context tests when context functions expect string keys
+- Testing only happy path - always test authorization boundaries

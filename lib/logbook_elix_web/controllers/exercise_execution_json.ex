@@ -20,7 +20,8 @@ defmodule LogbookElixWeb.ExerciseExecutionJSON do
       id: exercise_execution.id,
       exercise: exercise_execution.exercise,
       note: exercise_execution.note,
-      exercise_order: exercise_execution.exercise_order
+      exercise_order: exercise_execution.exercise_order,
+      sets: exercise_execution.sets
     }
   end
 end

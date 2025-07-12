@@ -8,13 +8,13 @@ defmodule LogbookElix.ExecutionsTest do
   describe "exercise_executions" do
     alias LogbookElix.Executions.ExerciseExecution
 
-    @invalid_attrs %{exercise: nil, note: nil, exercise_order: nil}
+    @invalid_attrs %{exercise_id: nil, note: nil, exercise_order: nil}
 
     test "list_exercise_executions/0 returns all exercise_executions" do
       exercise_execution = insert(:exercise_execution)
       [found_execution] = Executions.list_exercise_executions()
       assert found_execution.id == exercise_execution.id
-      assert found_execution.exercise == exercise_execution.exercise
+      assert found_execution.exercise_id == exercise_execution.exercise_id
       assert found_execution.exercise_order == exercise_execution.exercise_order
       assert found_execution.workout_id == exercise_execution.workout_id
     end
@@ -23,19 +23,26 @@ defmodule LogbookElix.ExecutionsTest do
       exercise_execution = insert(:exercise_execution)
       found_execution = Executions.get_exercise_execution!(exercise_execution.id)
       assert found_execution.id == exercise_execution.id
-      assert found_execution.exercise == exercise_execution.exercise
+      assert found_execution.exercise_id == exercise_execution.exercise_id
       assert found_execution.exercise_order == exercise_execution.exercise_order
       assert found_execution.workout_id == exercise_execution.workout_id
     end
 
     test "create_exercise_execution/1 with valid data creates a exercise_execution" do
       workout = insert(:workout)
-      valid_attrs = params_for(:exercise_execution) |> Map.put(:workout_id, workout.id)
+      exercise = insert(:exercise)
+
+      valid_attrs = %{
+        exercise_id: exercise.id,
+        workout_id: workout.id,
+        exercise_order: 1,
+        note: "Test note"
+      }
 
       assert {:ok, %ExerciseExecution{} = exercise_execution} =
                Executions.create_exercise_execution(valid_attrs)
 
-      assert exercise_execution.exercise == valid_attrs.exercise
+      assert exercise_execution.exercise_id == valid_attrs.exercise_id
       assert exercise_execution.note == valid_attrs.note
       assert exercise_execution.exercise_order == valid_attrs.exercise_order
       assert exercise_execution.workout_id == workout.id
@@ -47,14 +54,20 @@ defmodule LogbookElix.ExecutionsTest do
 
     test "update_exercise_execution/2 with valid data updates the exercise_execution" do
       exercise_execution = insert(:exercise_execution)
-      update_attrs = %{exercise: 43, note: "some updated note", exercise_order: 43}
+      new_exercise = insert(:exercise)
 
-      assert {:ok, %ExerciseExecution{} = exercise_execution} =
+      update_attrs = %{
+        exercise_id: new_exercise.id,
+        note: "some updated note",
+        exercise_order: 43
+      }
+
+      assert {:ok, %ExerciseExecution{} = updated_execution} =
                Executions.update_exercise_execution(exercise_execution, update_attrs)
 
-      assert exercise_execution.exercise == 43
-      assert exercise_execution.note == "some updated note"
-      assert exercise_execution.exercise_order == 43
+      assert updated_execution.exercise_id == new_exercise.id
+      assert updated_execution.note == "some updated note"
+      assert updated_execution.exercise_order == 43
     end
 
     test "update_exercise_execution/2 with invalid data returns error changeset" do
@@ -65,7 +78,7 @@ defmodule LogbookElix.ExecutionsTest do
 
       found_execution = Executions.get_exercise_execution!(exercise_execution.id)
       assert found_execution.id == exercise_execution.id
-      assert found_execution.exercise == exercise_execution.exercise
+      assert found_execution.exercise_id == exercise_execution.exercise_id
     end
 
     test "delete_exercise_execution/1 deletes the exercise_execution" do

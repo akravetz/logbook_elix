@@ -19,7 +19,10 @@ defmodule LogbookElix.Executions do
 
   """
   def list_exercise_executions do
-    Repo.all(ExerciseExecution)
+    from(ee in ExerciseExecution,
+      preload: [:exercise]
+    )
+    |> Repo.all()
   end
 
   @doc """
@@ -39,7 +42,7 @@ defmodule LogbookElix.Executions do
   def get_exercise_execution!(id) do
     ExerciseExecution
     |> Repo.get!(id)
-    |> Repo.preload(:sets)
+    |> Repo.preload([:exercise, :sets])
   end
 
   @doc """
@@ -59,6 +62,10 @@ defmodule LogbookElix.Executions do
     |> ExerciseExecution.changeset(attrs)
     |> Ecto.Changeset.cast_assoc(:sets, with: &Set.changeset/2)
     |> Repo.insert()
+    |> case do
+      {:ok, exercise_execution} -> {:ok, Repo.preload(exercise_execution, [:exercise, :sets])}
+      error -> error
+    end
   end
 
   @doc """
@@ -79,6 +86,10 @@ defmodule LogbookElix.Executions do
     |> ExerciseExecution.changeset(attrs)
     |> Ecto.Changeset.cast_assoc(:sets, with: &Set.changeset/2)
     |> Repo.update()
+    |> case do
+      {:ok, exercise_execution} -> {:ok, Repo.preload(exercise_execution, [:exercise, :sets])}
+      error -> error
+    end
   end
 
   @doc """

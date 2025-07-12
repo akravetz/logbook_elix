@@ -34,6 +34,7 @@ defmodule LogbookElixWeb.Router do
 
     resources "/users", UserController, only: [:index, :show, :update]
     resources "/workouts", WorkoutController, except: [:new, :edit]
+    resources "/exercises", ExerciseController, except: [:new, :edit]
     resources "/exercise_executions", ExerciseExecutionController, except: [:new, :edit]
 
     # Transcription endpoint with rate limiting

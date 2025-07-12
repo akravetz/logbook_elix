@@ -8,6 +8,7 @@ defmodule LogbookElix.Factory do
 
   alias LogbookElix.Accounts.User
   alias LogbookElix.Workouts.Workout
+  alias LogbookElix.Exercises.Exercise
   alias LogbookElix.Executions.ExerciseExecution
   alias LogbookElix.Sets.Set
 
@@ -28,10 +29,30 @@ defmodule LogbookElix.Factory do
     }
   end
 
+  def exercise_factory do
+    %Exercise{
+      name: sequence(:name, &"Exercise #{&1}"),
+      body_part: :chest,
+      modality: :barbell,
+      is_system_created: false,
+      created_by_user: build(:user)
+    }
+  end
+
+  def system_exercise_factory do
+    %Exercise{
+      name: sequence(:name, &"System Exercise #{&1}"),
+      body_part: :chest,
+      modality: :barbell,
+      is_system_created: true,
+      created_by_user: nil
+    }
+  end
+
   def exercise_execution_factory do
     %ExerciseExecution{
       workout: build(:workout),
-      exercise: sequence(:exercise, &(&1 + 1)),
+      exercise: build(:exercise),
       exercise_order: sequence(:exercise_order, &(&1 + 1)),
       note: "Exercise note"
     }

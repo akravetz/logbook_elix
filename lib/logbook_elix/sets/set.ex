@@ -2,6 +2,7 @@ defmodule LogbookElix.Sets.Set do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder, except: [:__meta__, :exercise_execution]}
   schema "sets" do
     field :weight, :float
     field :clean_reps, :integer

@@ -156,8 +156,16 @@ defmodule LogbookElix.Executions do
 
   defp fetch_workout_id(attrs) do
     case Map.fetch(attrs, "workout_id") do
-      :error -> {:error, "Exercise execution not found or access denied"}
-      {:ok, workout_id} -> {:ok, workout_id}
+      :error ->
+        changeset =
+          %ExerciseExecution{}
+          |> ExerciseExecution.changeset(attrs)
+          |> Ecto.Changeset.add_error(:workout_id, "can't be blank")
+
+        {:error, changeset}
+
+      {:ok, workout_id} ->
+        {:ok, workout_id}
     end
   end
 

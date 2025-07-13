@@ -75,7 +75,7 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
 
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, ~p"/api/exercise_executions", exercise_execution: @invalid_attrs)
-      assert json_response(conn, 401)["error"] == "Exercise execution not found or access denied"
+      assert json_response(conn, 422)["errors"] != %{}
     end
   end
 

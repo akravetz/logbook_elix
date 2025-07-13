@@ -7,6 +7,7 @@ Focus Areas
 - Dead Code: Unreachable code, unused variables/functions/imports, commented-out blocks
 Code Duplication: Repeated logic, similar functions, copy-paste patterns across files. Ignore single line duplications
 - Code Smells: Long functions, deep nesting, complex conditionals, magic numbers/strings
+- Redundant Code: Unnecessary pattern matching followed by immediate re-creation of same tuple/structure
 - Naming & Structure: Unclear variable names, inconsistent conventions, poor file organization
 - Dependencies: Unused imports, outdated packages, circular dependencies
 
@@ -14,6 +15,7 @@ Performance & Database Issues
 
 - N+1 Database Queries: Multiple individual queries that could be combined into bulk operations
 - Bulk Operations: Individual inserts/updates/deletes that should use Repo.insert_all/3, Repo.update_all/3, or similar bulk operations
+- Inefficient Collection Lookups: Using `in` operator with lists instead of MapSet for membership checking (O(M×N) vs O(M+N))
 - Inefficient Queries: Missing indexes, unnecessary JOINs, SELECT * usage, missing query optimization
 - Database Transactions: Operations that should be wrapped in transactions for data consistency
 - Eager Loading: Missing preload causing additional queries, or over-eager loading of unused associations

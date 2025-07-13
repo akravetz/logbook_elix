@@ -88,14 +88,13 @@ defmodule LogbookElix.Seeds.ExerciseSeeder do
   end
 
   defp insert_exercises(exercises) do
-    existing_names = get_existing_exercise_names()
+    existing_names = get_existing_exercise_names() |> MapSet.new()
 
     new_exercises =
       exercises
-      |> Enum.reject(fn exercise -> exercise.name in existing_names end)
+      |> Enum.reject(fn exercise -> MapSet.member?(existing_names, exercise.name) end)
 
-    {:ok, inserted_count} = insert_new_exercises(new_exercises)
-    {:ok, inserted_count}
+    insert_new_exercises(new_exercises)
   end
 
   defp get_existing_exercise_names do

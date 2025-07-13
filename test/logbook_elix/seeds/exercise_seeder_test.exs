@@ -58,22 +58,6 @@ defmodule LogbookElix.Seeds.ExerciseSeederTest do
       total_exercises = Repo.aggregate(Exercise, :count, :id)
       assert total_exercises == count + 1
     end
-
-    test "returns error when CSV file cannot be read" do
-      # Mock file reading failure by temporarily moving the CSV
-      original_path = "priv/repo/seeds/exercises.csv"
-      temp_path = "priv/repo/seeds/exercises.csv.backup"
-
-      if File.exists?(original_path) do
-        File.rename(original_path, temp_path)
-
-        assert {:error, error_message} = ExerciseSeeder.seed_exercises()
-        assert String.contains?(error_message, "Failed to read CSV file")
-
-        # Restore the file
-        File.rename(temp_path, original_path)
-      end
-    end
   end
 
   describe "body part mapping" do

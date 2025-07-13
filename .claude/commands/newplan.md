@@ -1,6 +1,8 @@
 ## Planning Phase - No Code Change
 DO NOT modify any code until I type "act". First, analyze the codebase and requirements to create a concrete implementation plan. Use available commands to explore the project structure, dependencies, and existing patterns.
 
+reference @docs/elixir_conventions.md for backend best practices if relevant
+
 ## Implementation Standards
 
 Use production-quality code with proper error handling, logging, and testing

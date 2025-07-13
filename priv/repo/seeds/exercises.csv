@@ -1,0 +1,129 @@
+name,body_part,modality
+Ab Crunch Machine,core,MACHINE
+Arnold Press,shoulders,DUMBBELL
+Assisted Pull-ups,back,MACHINE
+Barbell Curl,biceps,BARBELL
+Barbell Hip Thrust,glutes,BARBELL
+Barbell Row,back,BARBELL
+Barbell Shrug,traps,BARBELL
+Barbell Squat,legs,BARBELL
+Behind-the-Neck Press,shoulders,BARBELL
+Bench Press,chest,BARBELL
+Bent-Over Row,back,BARBELL
+Bicycle Crunches,core,BODYWEIGHT
+Bodyweight Squats,legs,BODYWEIGHT
+Box Jumps,legs,BODYWEIGHT
+Bulgarian Split Squat,legs,DUMBBELL
+Burpees,full body,BODYWEIGHT
+Cable Bicep Curl,biceps,CABLE
+Cable Crossover,chest,CABLE
+Cable Crunches,core,CABLE
+Cable Face Pull,rear delts,CABLE
+Cable Front Raises,shoulders,CABLE
+Cable Hammer Curl,biceps,CABLE
+Cable Kickbacks,glutes,CABLE
+Cable Lateral Raises,shoulders,CABLE
+Cable Pullover,back,CABLE
+Cable Rear Delt Flyes,shoulders,CABLE
+Cable Russian Twists,core,CABLE
+Cable Shrugs,traps,CABLE
+Cable Woodchoppers,core,CABLE
+Calf Raise,calves,MACHINE
+Calf Raises,calves,DUMBBELL
+Cable Chest Fly,chest,CABLE
+Chest Press Machine,chest,MACHINE
+Chin-ups,back,BODYWEIGHT
+Clean and Jerk,full body,BARBELL
+Close-Grip Bench Press,triceps,BARBELL
+Concentration Curl,biceps,DUMBBELL
+Crunches,core,BODYWEIGHT
+Deadlift,back,BARBELL
+Decline Bench Press,chest,BARBELL
+Decline Dumbbell Press,chest,DUMBBELL
+Diamond Push-ups,triceps,BODYWEIGHT
+Dips,triceps,BODYWEIGHT
+Donkey Calf Raises,calves,BODYWEIGHT
+Dumbbell Bench Press,chest,DUMBBELL
+Dumbbell Curl,biceps,DUMBBELL
+Dumbbell Flyes,chest,DUMBBELL
+Dumbbell Hip Thrust,glutes,DUMBBELL
+Dumbbell Lunges,legs,DUMBBELL
+Dumbbell Row,back,DUMBBELL
+Dumbbell Shoulder Press,shoulders,DUMBBELL
+Dumbbell Shrug,traps,DUMBBELL
+EZ-Bar Curl,biceps,BARBELL
+Face Pull,shoulders,CABLE
+Farmer's Walk,forearms,DUMBBELL
+Front Raises,shoulders,DUMBBELL
+Front Squat,legs,BARBELL
+Glute Bridge,glutes,BODYWEIGHT
+Glute Ham Raise,hamstrings,BODYWEIGHT
+Goblet Squat,legs,DUMBBELL
+Good Mornings,lower back,BARBELL
+Hack Squat,legs,MACHINE
+Hammer Curl,biceps,DUMBBELL
+Handstand Push-ups,shoulders,BODYWEIGHT
+Hanging Leg Raises,core,BODYWEIGHT
+Hip Thrust Machine,glutes,MACHINE
+Hyperextension,lower back,BODYWEIGHT
+Incline Bench Press,chest,BARBELL
+Incline Dumbbell Curl,biceps,DUMBBELL
+Incline Dumbbell Flyes,chest,DUMBBELL
+Incline Dumbbell Press,chest,DUMBBELL
+Inverted Rows,back,BODYWEIGHT
+Jump Squats,legs,BODYWEIGHT
+Lat Pulldown,back,CABLE
+Lateral Raises,shoulders,DUMBBELL
+Leg Curl,hamstrings,MACHINE
+Leg Extension,quads,MACHINE
+Leg Press,legs,MACHINE
+Leg Raises,core,BODYWEIGHT
+Machine Chest Press,chest,MACHINE
+Machine Row,back,MACHINE
+Mountain Climbers,core,BODYWEIGHT
+Overhead Cable Extension,triceps,CABLE
+Overhead Press,shoulders,BARBELL
+Overhead Triceps Extension,triceps,DUMBBELL
+Pec Deck,chest,MACHINE
+Pike Push-ups,shoulders,BODYWEIGHT
+Pistol Squats,legs,BODYWEIGHT
+Plank,core,BODYWEIGHT
+Plate Pinches,forearms,BODYWEIGHT
+Power Clean,full body,BARBELL
+Preacher Curl,biceps,MACHINE
+Pull-ups,back,BODYWEIGHT
+Push-ups,chest,BODYWEIGHT
+Rear Delt Flyes,shoulders,DUMBBELL
+Reverse Hyperextension,lower back,MACHINE
+Reverse Pec Deck Fly,rear delts,MACHINE
+Reverse Wrist Curls,forearms,DUMBBELL
+Romanian Deadlift,hamstrings,BARBELL
+Russian Twists,core,BODYWEIGHT
+Seated Cable Row,back,CABLE
+Seated Calf Raise,calves,MACHINE
+Shoulder Press Machine,shoulders,MACHINE
+Shrugs,traps,BARBELL
+Side Plank,core,BODYWEIGHT
+Single-Leg Romanian Deadlift,legs,DUMBBELL
+Sissy Squat,quads,BODYWEIGHT
+Skullcrusher,triceps,BARBELL
+Smith Machine Bench Press,chest,SMITH
+Smith Machine Bent-Over Row,back,SMITH
+Smith Machine Calf Raise,legs,SMITH
+Smith Machine Close-Grip Bench Press,triceps,SMITH
+Smith Machine Overhead Press,shoulders,SMITH
+Smith Machine Shrugs,traps,SMITH
+Smith Machine Squat,legs,SMITH
+Snatch,full body,BARBELL
+Standing Calf Raise,calves,MACHINE
+Stiff-Leg Deadlift,legs,BARBELL
+T-Bar Row,back,BARBELL
+Tricep Dip Machine,triceps,MACHINE
+Tricep Dips,triceps,BODYWEIGHT
+Triceps Kickback,triceps,DUMBBELL
+Triceps Pushdown,triceps,CABLE
+Upright Row,shoulders,DUMBBELL
+Walking Lunges,legs,DUMBBELL
+Wide-Grip Lat Pulldown,back,CABLE
+Wood Chop,core,CABLE
+Wrist Curls,forearms,DUMBBELL

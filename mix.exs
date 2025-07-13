@@ -48,6 +48,7 @@ defmodule LogbookElix.MixProject do
       {:open_api_spex, "~> 3.0"},
       {:guardian, "~> 2.3"},
       {:req, "~> 0.5"},
+      {:nimble_csv, "~> 1.1"},
       {:jose, "~> 1.11"},
       {:cachex, "~> 3.6"},
       {:hammer, "~> 7.0"},

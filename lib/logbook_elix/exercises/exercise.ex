@@ -24,7 +24,7 @@ defmodule LogbookElix.Exercises.Exercise do
       ]
 
     field :modality, Ecto.Enum,
-      values: [:barbell, :dumbbell, :cable, :machine, :bodyweight, :other]
+      values: [:barbell, :dumbbell, :cable, :machine, :bodyweight, :smith, :other]
 
     field :is_system_created, :boolean, default: false
 

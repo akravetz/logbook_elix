@@ -22,6 +22,18 @@ defmodule LogbookElix.Factory do
     }
   end
 
+  def dev_user_factory do
+    name = sequence(:dev_name, &"devuser#{&1}")
+
+    %User{
+      email_address: "#{name}@dev.com",
+      google_id: "dev-#{name}",
+      is_active: true,
+      name: name,
+      profile_image_url: "http://www.dev.com/#{name}.png"
+    }
+  end
+
   def workout_factory do
     %Workout{
       user: build(:user),

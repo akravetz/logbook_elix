@@ -66,4 +66,40 @@ defmodule LogbookElix.AccountsTest do
       assert %Ecto.Changeset{} = Accounts.change_user(user)
     end
   end
+
+  describe "create_dev_user/1" do
+    alias LogbookElix.Accounts.User
+
+    test "creates a new dev user with correct attributes" do
+      assert {:ok, %User{} = user} = Accounts.create_dev_user("testuser")
+      assert user.name == "testuser"
+      assert user.email_address == "testuser@dev.com"
+      assert user.google_id == "dev-testuser"
+      assert user.profile_image_url == "http://www.dev.com/testuser.png"
+      assert user.is_active == true
+    end
+
+    test "updates existing dev user on conflict" do
+      # Create first user
+      {:ok, user1} = Accounts.create_dev_user("testuser")
+
+      # Create again with same name (should update existing)
+      {:ok, user2} = Accounts.create_dev_user("testuser")
+
+      assert user1.id == user2.id
+      assert user2.email_address == "testuser@dev.com"
+      assert user2.google_id == "dev-testuser"
+    end
+
+    test "creates different users for different names" do
+      {:ok, user1} = Accounts.create_dev_user("user1")
+      {:ok, user2} = Accounts.create_dev_user("user2")
+
+      assert user1.id != user2.id
+      assert user1.email_address == "user1@dev.com"
+      assert user2.email_address == "user2@dev.com"
+      assert user1.google_id == "dev-user1"
+      assert user2.google_id == "dev-user2"
+    end
+  end
 end

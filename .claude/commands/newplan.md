@@ -3,6 +3,8 @@ DO NOT modify any code until I type "act". First, analyze the codebase and requi
 
 reference @docs/elixir_conventions.md for backend best practices if relevant
 
+reference @docs/antipatterns.md for backend antipatterns if relevant
+
 ## Implementation Standards
 
 Use production-quality code with proper error handling, logging, and testing

@@ -33,9 +33,7 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
 
   describe "create workout" do
     test "renders workout when data is valid", %{conn: conn} do
-      user = insert(:user)
-      attrs = Map.put(@create_attrs, :user_id, user.id)
-      conn = post(conn, ~p"/api/workouts", workout: attrs)
+      conn = post(conn, ~p"/api/workouts", workout: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, ~p"/api/workouts/#{id}")
@@ -47,14 +45,17 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/api/workouts", workout: @invalid_attrs)
+      invalid_attrs = %{finished_at: "invalid-date"}
+      conn = post(conn, ~p"/api/workouts", workout: invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
   describe "update workout" do
-    setup do
-      %{workout: insert(:workout)}
+    setup %{conn: conn} do
+      # Create workout for the authenticated user
+      user = extract_user_from_conn(conn)
+      %{workout: insert(:workout, user: user)}
     end
 
     test "renders workout when data is valid", %{conn: conn, workout: %Workout{id: id} = workout} do
@@ -73,20 +74,47 @@ defmodule LogbookElixWeb.WorkoutControllerTest do
       conn = put(conn, ~p"/api/workouts/#{workout}", workout: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
+
+    test "returns unauthorized when trying to update another user's workout", %{conn: conn} do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+
+      conn = put(conn, ~p"/api/workouts/#{other_workout}", workout: @update_attrs)
+      assert json_response(conn, 401)["error"] == "Workout not found or access denied"
+    end
   end
 
   describe "delete workout" do
-    setup do
-      %{workout: insert(:workout)}
+    setup %{conn: conn} do
+      # Create workout for the authenticated user
+      user = extract_user_from_conn(conn)
+      %{workout: insert(:workout, user: user)}
     end
 
     test "deletes chosen workout", %{conn: conn, workout: workout} do
       conn = delete(conn, ~p"/api/workouts/#{workout}")
       assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
-        get(conn, ~p"/api/workouts/#{workout}")
-      end
+      conn = get(conn, ~p"/api/workouts/#{workout}")
+      assert json_response(conn, 401)["error"] == "Workout not found or access denied"
+    end
+
+    test "returns unauthorized when trying to delete another user's workout", %{conn: conn} do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+
+      conn = delete(conn, ~p"/api/workouts/#{other_workout}")
+      assert json_response(conn, 401)["error"] == "Workout not found or access denied"
+    end
+  end
+
+  describe "show workout" do
+    test "returns unauthorized when trying to view another user's workout", %{conn: conn} do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+
+      conn = get(conn, ~p"/api/workouts/#{other_workout}")
+      assert json_response(conn, 401)["error"] == "Workout not found or access denied"
     end
   end
 end

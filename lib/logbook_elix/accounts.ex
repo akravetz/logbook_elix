@@ -148,4 +148,31 @@ defmodule LogbookElix.Accounts do
       returning: true
     )
   end
+
+  @doc """
+  Creates or updates a development user with the given name.
+
+  ## Examples
+
+      iex> create_dev_user("testuser")
+      {:ok, %User{}}
+
+  """
+  def create_dev_user(name) do
+    attrs = %{
+      email_address: "#{name}@dev.com",
+      google_id: "dev-#{name}",
+      name: name,
+      profile_image_url: "http://www.dev.com/#{name}.png",
+      is_active: true
+    }
+
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert(
+      on_conflict: {:replace, [:google_id, :name, :profile_image_url, :is_active]},
+      conflict_target: :email_address,
+      returning: true
+    )
+  end
 end

@@ -41,8 +41,9 @@ defmodule LogbookElixWeb.Router do
     post "/transcriptions", TranscriptionController, :create
   end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
-  if Application.compile_env(:logbook_elix, :dev_routes) do
+  # Enable development-only routes
+  if Mix.env() in [:dev, :test] do
+    # Enable LiveDashboard and Swoosh mailbox preview in development
     # If you want to use the LiveDashboard in production, you should put
     # it behind authentication and allow only admins to access it.
     # If your application does not have an admins-only section yet,
@@ -55,6 +56,12 @@ defmodule LogbookElixWeb.Router do
 
       live_dashboard "/dashboard", metrics: LogbookElixWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+
+    scope "/api/dev", LogbookElixWeb do
+      pipe_through :api
+
+      post "/auth", AuthController, :dev_login
     end
   end
 end

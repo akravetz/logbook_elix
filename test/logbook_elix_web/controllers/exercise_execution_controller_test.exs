@@ -35,7 +35,8 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
 
   describe "create exercise_execution" do
     test "renders exercise_execution when data is valid", %{conn: conn} do
-      workout = insert(:workout)
+      user = extract_user_from_conn(conn)
+      workout = insert(:workout, user: user)
       exercise = insert(:exercise)
 
       attrs =
@@ -58,6 +59,20 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
       assert exercise_id == exercise.id
     end
 
+    test "returns error when trying to create execution for another user's workout", %{conn: conn} do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+      exercise = insert(:exercise)
+
+      attrs =
+        @create_attrs
+        |> Map.put(:workout_id, other_workout.id)
+        |> Map.put(:exercise_id, exercise.id)
+
+      conn = post(conn, ~p"/api/exercise_executions", exercise_execution: attrs)
+      assert json_response(conn, 401)["error"] == "Workout not found or access denied"
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post(conn, ~p"/api/exercise_executions", exercise_execution: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
@@ -65,8 +80,10 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "update exercise_execution" do
-    setup do
-      %{exercise_execution: insert(:exercise_execution)}
+    setup %{conn: conn} do
+      user = extract_user_from_conn(conn)
+      workout = insert(:workout, user: user)
+      %{exercise_execution: insert(:exercise_execution, workout: workout)}
     end
 
     test "renders exercise_execution when data is valid", %{
@@ -95,6 +112,21 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
       assert exercise_id == new_exercise.id
     end
 
+    test "returns unauthorized when trying to update another user's exercise execution", %{
+      conn: conn
+    } do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+      other_execution = insert(:exercise_execution, workout: other_workout)
+
+      conn =
+        put(conn, ~p"/api/exercise_executions/#{other_execution}",
+          exercise_execution: @update_attrs
+        )
+
+      assert json_response(conn, 401)["error"] == "Exercise execution not found or access denied"
+    end
+
     test "renders errors when data is invalid", %{
       conn: conn,
       exercise_execution: exercise_execution
@@ -109,8 +141,10 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
   end
 
   describe "delete exercise_execution" do
-    setup do
-      %{exercise_execution: insert(:exercise_execution)}
+    setup %{conn: conn} do
+      user = extract_user_from_conn(conn)
+      workout = insert(:workout, user: user)
+      %{exercise_execution: insert(:exercise_execution, workout: workout)}
     end
 
     test "deletes chosen exercise_execution", %{
@@ -120,9 +154,32 @@ defmodule LogbookElixWeb.ExerciseExecutionControllerTest do
       conn = delete(conn, ~p"/api/exercise_executions/#{exercise_execution}")
       assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
-        get(conn, ~p"/api/exercise_executions/#{exercise_execution}")
-      end
+      conn = get(conn, ~p"/api/exercise_executions/#{exercise_execution}")
+      assert json_response(conn, 401)["error"] == "Exercise execution not found or access denied"
+    end
+
+    test "returns unauthorized when trying to delete another user's exercise execution", %{
+      conn: conn
+    } do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+      other_execution = insert(:exercise_execution, workout: other_workout)
+
+      conn = delete(conn, ~p"/api/exercise_executions/#{other_execution}")
+      assert json_response(conn, 401)["error"] == "Exercise execution not found or access denied"
+    end
+  end
+
+  describe "show exercise_execution" do
+    test "returns unauthorized when trying to view another user's exercise execution", %{
+      conn: conn
+    } do
+      other_user = insert(:user)
+      other_workout = insert(:workout, user: other_user)
+      other_execution = insert(:exercise_execution, workout: other_workout)
+
+      conn = get(conn, ~p"/api/exercise_executions/#{other_execution}")
+      assert json_response(conn, 401)["error"] == "Exercise execution not found or access denied"
     end
   end
 end

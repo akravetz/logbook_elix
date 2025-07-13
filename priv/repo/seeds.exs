@@ -15,7 +15,8 @@ alias LogbookElix.Seeds.ExerciseSeeder
 # Seed exercises from CSV
 case ExerciseSeeder.seed_exercises() do
   {:ok, count} ->
-    IO.puts("Successfully seeded #{count} exercises")
+    IO.puts("Exercise seeding completed:")
+    IO.puts("  - #{count} new exercises inserted")
 
   {:error, reason} ->
     IO.puts("Failed to seed exercises: #{reason}")

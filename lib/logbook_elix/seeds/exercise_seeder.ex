@@ -28,7 +28,6 @@ defmodule LogbookElix.Seeds.ExerciseSeeder do
   defp parse_exercises(csv_content) do
     csv_content
     |> CSV.parse_string(skip_headers: false)
-    # Skip header row
     |> Enum.drop(1)
     |> Enum.map(&parse_exercise_row/1)
     |> Enum.reject(&is_nil/1)
@@ -95,21 +94,8 @@ defmodule LogbookElix.Seeds.ExerciseSeeder do
       exercises
       |> Enum.reject(fn exercise -> exercise.name in existing_names end)
 
-    case insert_new_exercises(new_exercises) do
-      {:ok, inserted_count} ->
-        total_count = length(exercises)
-        skipped_count = total_count - inserted_count
-
-        IO.puts("Exercise seeding completed:")
-        IO.puts("  - #{inserted_count} new exercises inserted")
-        IO.puts("  - #{skipped_count} exercises skipped (already exist)")
-        IO.puts("  - #{total_count} total exercises in CSV")
-
-        {:ok, inserted_count}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
+    {:ok, inserted_count} = insert_new_exercises(new_exercises)
+    {:ok, inserted_count}
   end
 
   defp get_existing_exercise_names do
@@ -118,30 +104,22 @@ defmodule LogbookElix.Seeds.ExerciseSeeder do
   end
 
   defp insert_new_exercises(exercises) do
-    try do
-      results =
-        exercises
-        |> Enum.map(fn exercise_attrs ->
-          %Exercise{}
-          |> Exercise.changeset(exercise_attrs)
-          |> Repo.insert()
+    if Enum.empty?(exercises) do
+      {:ok, 0}
+    else
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      exercise_entries =
+        Enum.map(exercises, fn attrs ->
+          Map.merge(attrs, %{
+            inserted_at: now,
+            updated_at: now
+          })
         end)
 
-      failed_inserts =
-        Enum.filter(results, fn
-          {:error, _} -> true
-          _ -> false
-        end)
-
-      if Enum.empty?(failed_inserts) do
-        {:ok, length(exercises)}
-      else
-        error_count = length(failed_inserts)
-        {:error, "#{error_count} exercises failed to insert"}
+      case Repo.insert_all(Exercise, exercise_entries) do
+        {count, _} -> {:ok, count}
       end
-    rescue
-      exception ->
-        {:error, "Exception during exercise insertion: #{Exception.message(exception)}"}
     end
   end
 end

@@ -96,7 +96,7 @@ defmodule LogbookElix.ExecutionsTest do
     test "create_exercise_execution/2 with invalid data returns error changeset" do
       user = insert(:user)
 
-      assert {:error, "Exercise execution not found or access denied"} =
+      assert {:error, %Ecto.Changeset{}} =
                Executions.create_exercise_execution(@invalid_attrs, user.id)
     end
 
